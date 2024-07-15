@@ -213,3 +213,16 @@ MatrixXf getTlist()
     MatrixXf T(4,4);
 
 }
+
+VectorXf systemGravity()
+{
+    VectorXf G(6);
+    VectorXf g_ref(6);
+    MatrixXf g(6,6);
+    g_ref << 0,0,0,0,0,-9.81;
+
+    for (int i=0; i<6; i++) 
+    {
+
+    }
+}

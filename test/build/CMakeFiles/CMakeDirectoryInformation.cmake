@@ -3,7 +3,7 @@
 
 # Relative path conversion top directories.
 set(CMAKE_RELATIVE_PATH_TOP_SOURCE "/home/ctrl/kinova/test")
-set(CMAKE_RELATIVE_PATH_TOP_BINARY "/home/ctrl/kinova/test/build-gcc-release")
+set(CMAKE_RELATIVE_PATH_TOP_BINARY "/home/ctrl/kinova/test/build")
 
 # Force unix paths in dependencies.
 set(CMAKE_FORCE_UNIX_PATHS 1)

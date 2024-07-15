@@ -4,8 +4,8 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/ctrl/kinova/test/current_control/current_control.cpp" "/home/ctrl/kinova/test/build-gcc-release/CMakeFiles/current_control.dir/current_control/current_control.cpp.o"
-  "/home/ctrl/kinova/test/utils.cpp" "/home/ctrl/kinova/test/build-gcc-release/CMakeFiles/current_control.dir/utils.cpp.o"
+  "/home/ctrl/kinova/test/current_control/current_control.cpp" "/home/ctrl/kinova/test/build/CMakeFiles/current_control.dir/current_control/current_control.cpp.o"
+  "/home/ctrl/kinova/test/utils.cpp" "/home/ctrl/kinova/test/build/CMakeFiles/current_control.dir/utils.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
