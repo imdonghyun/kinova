@@ -6,7 +6,7 @@ then
 else
     build_type="${1}"
 fi
-build_folder="build-gcc-${build_type}"
+build_folder="build"
 
 kortex_api_folder="$2"
 
