@@ -41,10 +41,6 @@ unistd.h
 -
 time.h
 -
-config.h
-../config.h
-
-../config.h
 
 /home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client/FrameHandler.h
 iostream
@@ -1314,8 +1310,6 @@ google/protobuf/io/coded_stream.h
 google/protobuf/arenastring.h
 -
 
-/home/ctrl/kinova/test/config.h
-
 /home/ctrl/kinova/test/current_control/current_control.cpp
 utils.h
 /home/ctrl/kinova/test/current_control/utils.h
@@ -1359,6 +1353,4 @@ unistd.h
 -
 time.h
 -
-config.h
-/home/ctrl/kinova/test/config.h
 

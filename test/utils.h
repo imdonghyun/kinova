@@ -23,7 +23,7 @@
 #include <unistd.h>
 #endif
 #include <time.h>
-#include "config.h"
+
 
 namespace k_api = Kinova::Api;
 

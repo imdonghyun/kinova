@@ -116,6 +116,9 @@ bool Robotarm::current_control()
     int timer_count = 0;
     int64_t now = 0;
     int64_t last = 0;
+    float cur_init = 1.5;
+    float cur;
+    float pos = base_feedback.actuators(4).position();
 
     int timeout = 0;
 
@@ -135,8 +138,8 @@ bool Robotarm::current_control()
         // };
 
         // Real-time loop
-        float cur = base_feedback.actuators(4).current_motor();
-        float pos = base_feedback.actuators(4).position();
+        
+        
         // while(timer_count < (time_duration * 1000))
         while(1)
         {
@@ -147,8 +150,9 @@ bool Robotarm::current_control()
                 get_velocity();
                 get_position();
 
-                cur_d[4] = cur + 0.1*(pos - pos_p[4]) - 0.1*vel_p[4];
-                std::cout << cur_d[4] << " " << pos_p[4] << " " << vel_p[4] << std::endl;
+                cur = cur_init + 0.5*(pos - pos_p[4]) - 0.05*vel_p[4];
+                std::cout << pos << " " << pos_p[4] << " " << cur_p[4] << std::endl;
+                std::cout << cur << std::endl;
                 base_command.mutable_actuators(4)->set_position(pos_p[4]);
                 base_command.mutable_actuators(4)->set_current_motor(cur);
                 // 0~5: 1번 ~ 6번 joint
