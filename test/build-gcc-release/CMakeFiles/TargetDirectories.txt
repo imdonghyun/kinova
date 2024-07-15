@@ -1,0 +1,3 @@
+/home/ctrl/kinova/test/build-gcc-release/CMakeFiles/rebuild_cache.dir
+/home/ctrl/kinova/test/build-gcc-release/CMakeFiles/current_control.dir
+/home/ctrl/kinova/test/build-gcc-release/CMakeFiles/edit_cache.dir
