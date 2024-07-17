@@ -208,21 +208,28 @@ MatrixXf adjop(VectorXf V)
     return adV;
 }
 
-MatrixXf getTlist()
+Tensor<float, 3> getTlist(VectorXf theta)
 {
-    MatrixXf T(4,4);
+    Tensor<float, 3> Tlist(6,4,4);
+
+    
 
 }
 
-VectorXf systemGravity()
+Tensor<float, 3> getAdlist(Tensor<float, 3> Tlist)
 {
-    VectorXf G(6);
-    VectorXf g_ref(6);
-    MatrixXf g(6,6);
-    g_ref << 0,0,0,0,0,-9.81;
 
-    for (int i=0; i<6; i++) 
-    {
-
-    }
 }
+
+// VectorXf systemGravity()
+// {
+//     VectorXf G(6);
+//     VectorXf g_ref(6);
+//     MatrixXf g(6,6);
+//     g_ref << 0,0,0,0,0,-9.81;
+
+//     for (int i=0; i<6; i++) 
+//     {
+
+//     }
+// }

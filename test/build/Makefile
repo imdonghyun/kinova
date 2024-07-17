@@ -114,71 +114,44 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named current_control
+# Target rules for targets named Robotics
 
 # Build rule for target.
-current_control: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 current_control
-.PHONY : current_control
+Robotics: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 Robotics
+.PHONY : Robotics
 
 # fast build rule for target.
-current_control/fast:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/build
-.PHONY : current_control/fast
+Robotics/fast:
+	$(MAKE) -f CMakeFiles/Robotics.dir/build.make CMakeFiles/Robotics.dir/build
+.PHONY : Robotics/fast
 
-current_control/current_control.o: current_control/current_control.cpp.o
+Robotics.o: Robotics.cpp.o
 
-.PHONY : current_control/current_control.o
-
-# target to build an object file
-current_control/current_control.cpp.o:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/current_control/current_control.cpp.o
-.PHONY : current_control/current_control.cpp.o
-
-current_control/current_control.i: current_control/current_control.cpp.i
-
-.PHONY : current_control/current_control.i
-
-# target to preprocess a source file
-current_control/current_control.cpp.i:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/current_control/current_control.cpp.i
-.PHONY : current_control/current_control.cpp.i
-
-current_control/current_control.s: current_control/current_control.cpp.s
-
-.PHONY : current_control/current_control.s
-
-# target to generate assembly for a file
-current_control/current_control.cpp.s:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/current_control/current_control.cpp.s
-.PHONY : current_control/current_control.cpp.s
-
-utils.o: utils.cpp.o
-
-.PHONY : utils.o
+.PHONY : Robotics.o
 
 # target to build an object file
-utils.cpp.o:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/utils.cpp.o
-.PHONY : utils.cpp.o
+Robotics.cpp.o:
+	$(MAKE) -f CMakeFiles/Robotics.dir/build.make CMakeFiles/Robotics.dir/Robotics.cpp.o
+.PHONY : Robotics.cpp.o
 
-utils.i: utils.cpp.i
+Robotics.i: Robotics.cpp.i
 
-.PHONY : utils.i
+.PHONY : Robotics.i
 
 # target to preprocess a source file
-utils.cpp.i:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/utils.cpp.i
-.PHONY : utils.cpp.i
+Robotics.cpp.i:
+	$(MAKE) -f CMakeFiles/Robotics.dir/build.make CMakeFiles/Robotics.dir/Robotics.cpp.i
+.PHONY : Robotics.cpp.i
 
-utils.s: utils.cpp.s
+Robotics.s: Robotics.cpp.s
 
-.PHONY : utils.s
+.PHONY : Robotics.s
 
 # target to generate assembly for a file
-utils.cpp.s:
-	$(MAKE) -f CMakeFiles/current_control.dir/build.make CMakeFiles/current_control.dir/utils.cpp.s
-.PHONY : utils.cpp.s
+Robotics.cpp.s:
+	$(MAKE) -f CMakeFiles/Robotics.dir/build.make CMakeFiles/Robotics.dir/Robotics.cpp.s
+.PHONY : Robotics.cpp.s
 
 # Help Target
 help:
@@ -187,14 +160,11 @@ help:
 	@echo "... clean"
 	@echo "... depend"
 	@echo "... rebuild_cache"
-	@echo "... current_control"
+	@echo "... Robotics"
 	@echo "... edit_cache"
-	@echo "... current_control/current_control.o"
-	@echo "... current_control/current_control.i"
-	@echo "... current_control/current_control.s"
-	@echo "... utils.o"
-	@echo "... utils.i"
-	@echo "... utils.s"
+	@echo "... Robotics.o"
+	@echo "... Robotics.i"
+	@echo "... Robotics.s"
 .PHONY : help
 
 

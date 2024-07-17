@@ -1,7 +1,7 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <Eigen/Dense>
-
+#include <unsupported/Eigen/CXX11/Tensor>
 
 using namespace Eigen;
 
@@ -30,7 +30,3 @@ VectorXf logSE3(MatrixXf T);
 MatrixXf Adjoint(MatrixXf T);
 
 MatrixXf adjop(VectorXf V);
-
-MatrixXf getTlist();
-
-MatrixXf getAdlist();

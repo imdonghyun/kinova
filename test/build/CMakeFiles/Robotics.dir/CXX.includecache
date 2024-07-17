@@ -1,0 +1,22 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/ctrl/kinova/test/Robotics.cpp
+iostream
+-
+Robotics.h
+/home/ctrl/kinova/test/Robotics.h
+
+/home/ctrl/kinova/test/Robotics.h
+cmath
+-
+Eigen/Dense
+-
+unsupported/Eigen/CXX11/Tensor
+-
+
