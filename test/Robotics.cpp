@@ -208,18 +208,182 @@ MatrixXf adjop(VectorXf V)
     return adV;
 }
 
-Tensor<float, 3> getTlist(VectorXf theta)
+void setConstant()
 {
-    Tensor<float, 3> Tlist(6,4,4);
+    VectorXf v1(6);
+    VectorXf v2(6);
+    VectorXf v3(6);
+    VectorXf v4(6);
+    VectorXf v5(6);
+    VectorXf v6(6);
 
+    v1 << 0,0,1,0,0,0;
+    v2 << 0,0,1,-0.03,0,0;
+    v3 << 0,0,1,0.28,0,0;
+    v4 << 0,0,1,-0.14,0,0;
+    v5 << 0,0,1,0,-0.285,0;
+    v6 << 0,0,1,0,0.105,0;
+
+    lambda_list << v1, v2, v3, v4, v5, v6;
+
+    T0_01 << 1, 0, 0, CM[0][0]+link[0][0],
+             0, 1, 0, CM[0][1]+link[0][1],
+             0, 0, 1, CM[0][2]+link[0][2],
+             0, 0, 0, 1;
+
+    T0_12 << 1, 0, 0, CM[1][0]+link[1][0],
+             0, 0,-1, CM[1][1]+link[1][1],
+             0, 1, 0, CM[1][2]+link[1][2],
+             0, 0, 0, 1;
+
+    T0_23 << 1, 0, 0, CM[2][0]+link[2][0],
+             0,-1, 0, CM[2][1]+link[2][1],
+             0, 0,-1, CM[2][2]+link[2][2],
+             0, 0, 0, 1;
+
+    T0_34 << 1, 0, 0, CM[3][0]+link[3][0],
+             0, 0,-1, CM[3][1]+link[3][1],
+             0, 1, 0, CM[3][2]+link[3][2],
+             0, 0, 0, 1;
+
+    T0_45 << 0, 0, 1, CM[4][0]+link[4][0],
+             0, 1, 0, CM[4][1]+link[4][1],
+             -1,0, 0, CM[4][2]+link[4][2],
+             0, 0, 0, 1;
+
+    T0_56 << 0, 0,-1, CM[5][0]+link[5][0],
+             0, 1, 0, CM[5][1]+link[5][1],
+             1, 0, 0, CM[5][2]+link[5][2],
+             0, 0, 0, 1;
+
+    T1J << 1, 0, 0, -CM[0][0],
+           0, 1, 0, -CM[0][1],
+           0, 0, 1, -CM[0][2],
+           0, 0, 0, 1;
+
+    T2J << 1, 0, 0, -CM[1][0],
+           0, 1, 0, -CM[1][1],
+           0, 0, 1, -CM[1][2],
+           0, 0, 0, 1;
+
+    T3J << 1, 0, 0, -CM[2][0],
+           0, 1, 0, -CM[2][1],
+           0, 0, 1, -CM[2][2],
+           0, 0, 0, 1;
+
+    T4J << 1, 0, 0, -CM[3][0],
+           0, 1, 0, -CM[3][1],
+           0, 0, 1, -CM[3][2],
+           0, 0, 0, 1;
+
+    T5J << 1, 0, 0, -CM[4][0],
+           0, 1, 0, -CM[4][1],
+           0, 0, 1, -CM[4][2],
+           0, 0, 0, 1;
+
+    T6J << 1, 0, 0, -CM[5][0],
+           0, 1, 0, -CM[5][1],
+           0, 0, 1, -CM[5][2],
+           0, 0, 0, 1;
+
+    Ad1J = Adjoint(T1J);
+    Ad2J = Adjoint(T2J);
+    Ad3J = Adjoint(T3J);
+    Ad4J = Adjoint(T4J);
+    Ad5J = Adjoint(T5J);
+    Ad6J = Adjoint(T6J);
     
+    VectorXf Ei(6);
+    Ei << 0,0,1,0,0,0;
+    
+    v1 = Ad1J*Ei;
+    v2 = Ad2J*Ei;
+    v3 = Ad3J*Ei;
+    v4 = Ad4J*Ei;
+    v5 = Ad5J*Ei;
+    v6 = Ad6J*Ei;
+    E_tilde_list << v1, v2, v3, v4, v5, v6;
+    E_tilde_dot_list << 0,0,0,0,0,0,
+                        0,0,0,0,0,0,
+                        0,0,0,0,0,0,
+                        0,0,0,0,0,0,
+                        0,0,0,0,0,0,
+                        0,0,0,0,0,0;
 
+    A1 << Inertia[0][0], Inertia[0][1], Inertia[0][2], 0, 0, 0,
+          Inertia[0][1], Inertia[0][3], Inertia[0][4], 0, 0, 0,
+          Inertia[0][2], Inertia[0][4], Inertia[0][5], 0, 0, 0,
+          0, 0, 0, Mass[0], 0, 0,
+          0, 0, 0, 0, Mass[0], 0,
+          0, 0, 0, 0, 0, Mass[0];
+
+    A2 << Inertia[1][0], Inertia[1][1], Inertia[1][2], 0, 0, 0,
+          Inertia[1][1], Inertia[1][3], Inertia[1][4], 0, 0, 0,
+          Inertia[1][2], Inertia[1][4], Inertia[1][5], 0, 0, 0,
+          0, 0, 0, Mass[1], 0, 0,
+          0, 0, 0, 0, Mass[1], 0,
+          0, 0, 0, 0, 0, Mass[1];
+    
+    A3 << Inertia[2][0], Inertia[2][1], Inertia[2][2], 0, 0, 0,
+          Inertia[2][1], Inertia[2][3], Inertia[2][4], 0, 0, 0,
+          Inertia[2][2], Inertia[2][4], Inertia[2][5], 0, 0, 0,
+          0, 0, 0, Mass[2], 0, 0,
+          0, 0, 0, 0, Mass[2], 0,
+          0, 0, 0, 0, 0, Mass[2];
+
+    A4 << Inertia[3][0], Inertia[3][1], Inertia[3][2], 0, 0, 0,
+          Inertia[3][1], Inertia[3][3], Inertia[3][4], 0, 0, 0,
+          Inertia[3][2], Inertia[3][4], Inertia[3][5], 0, 0, 0,
+          0, 0, 0, Mass[3], 0, 0,
+          0, 0, 0, 0, Mass[3], 0,
+          0, 0, 0, 0, 0, Mass[3];
+
+    A5 << Inertia[4][0], Inertia[4][1], Inertia[4][2], 0, 0, 0,
+          Inertia[4][1], Inertia[4][3], Inertia[4][4], 0, 0, 0,
+          Inertia[4][2], Inertia[4][4], Inertia[4][5], 0, 0, 0,
+          0, 0, 0, Mass[4], 0, 0,
+          0, 0, 0, 0, Mass[4], 0,
+          0, 0, 0, 0, 0, Mass[4];
+
+    A6 << Inertia[5][0], Inertia[5][1], Inertia[5][2], 0, 0, 0,
+          Inertia[5][1], Inertia[5][3], Inertia[5][4], 0, 0, 0,
+          Inertia[5][2], Inertia[5][4], Inertia[5][5], 0, 0, 0,
+          0, 0, 0, Mass[5], 0, 0,
+          0, 0, 0, 0, Mass[5], 0,
+          0, 0, 0, 0, 0, Mass[5];
 }
 
-Tensor<float, 3> getAdlist(Tensor<float, 3> Tlist)
+void updateTlist(VectorXf theta)
 {
-
+    T01 = expse3(lambda_list.col(0)*theta(0))*T0_01;
+    T12 = expse3(lambda_list.col(1)*theta(1))*T0_12;
+    T23 = expse3(lambda_list.col(2)*theta(2))*T0_23;
+    T34 = expse3(lambda_list.col(3)*theta(3))*T0_34;
+    T45 = expse3(lambda_list.col(4)*theta(4))*T0_45;
+    T56 = expse3(lambda_list.col(5)*theta(5))*T0_56;
 }
+
+void updateAdlist()
+{
+    Ad01 = Adjoint(T01);
+    Ad12 = Adjoint(T12);
+    Ad23 = Adjoint(T23);
+    Ad34 = Adjoint(T34);
+    Ad45 = Adjoint(T45);
+    Ad56 = Adjoint(T56);
+}
+
+void updateadlist(VectorXf dtheta)
+{
+    ad01 = adjop(E_tilde_list.col(0)*dtheta(0));
+    ad12 = adjop(E_tilde_list.col(1)*dtheta(1));
+    ad23 = adjop(E_tilde_list.col(2)*dtheta(2));
+    ad34 = adjop(E_tilde_list.col(3)*dtheta(3));
+    ad45 = adjop(E_tilde_list.col(4)*dtheta(4));
+    ad56 = adjop(E_tilde_list.col(5)*dtheta(5));
+}
+
+
 
 // VectorXf systemGravity()
 // {
