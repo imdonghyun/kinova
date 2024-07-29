@@ -191,6 +191,31 @@ MatrixXf Adjoint(MatrixXf T)
     return AdT;
 }
 
+MatrixXf InvAd(MatrixXf Ad)
+{
+    MatrixXf tmp(6,6);
+
+    tmp.setZero();
+
+    tmp.block<3,3>(0,0) = Ad.block<3,3>(0,0).transpose();
+    tmp.block<3,3>(3,0) = Ad.block<3,3>(3,0).transpose();
+    tmp.block<3,3>(3,3) = Ad.block<3,3>(3,3).transpose();
+
+    return tmp;
+}
+
+MatrixXf InvTransAd(MatrixXf Ad)
+{
+    MatrixXf tmp(6,6);
+
+    tmp = Ad;
+
+    tmp.block<3,3>(3,0) = Ad.block<3,3>(0,3);
+    tmp.block<3,3>(0,3) = Ad.block<3,3>(3,0);
+
+    return tmp;
+}
+
 MatrixXf adjop(VectorXf V)
 {
     MatrixXf adV(6,6);
@@ -226,174 +251,212 @@ void setConstant()
 
     lambda_list << v1, v2, v3, v4, v5, v6;
 
-    T0_01 << 1, 0, 0, CM[0][0]+link[0][0],
-             0, 1, 0, CM[0][1]+link[0][1],
-             0, 0, 1, CM[0][2]+link[0][2],
-             0, 0, 0, 1;
+    T0list << 1, 0, 0, 0.000025,
+              0, 1, 0, 0.022135,
+              0, 0, 1, 0.227677,
+              0, 0, 0, 1, //{0}->{1}
 
-    T0_12 << 1, 0, 0, CM[1][0]+link[1][0],
-             0, 0,-1, CM[1][1]+link[1][1],
-             0, 1, 0, CM[1][2]+link[1][2],
-             0, 0, 0, 1;
+              1, 0, 0, 0.029983,
+              0, 0,-1,-0.075303,
+              0, 1, 0, 0.484850,
+              0, 0, 0, 1, //{0}->{2}
 
-    T0_23 << 1, 0, 0, CM[2][0]+link[2][0],
-             0,-1, 0, CM[2][1]+link[2][1],
-             0, 0,-1, CM[2][2]+link[2][2],
-             0, 0, 0, 1;
+              1, 0, 0, 0.030156,
+              0, 0, 1,-0.022644,
+              0,-1, 0, 0.618322,
+              0, 0, 0, 1, //{0}->{3}
 
-    T0_34 << 1, 0, 0, CM[3][0]+link[3][0],
-             0, 0,-1, CM[3][1]+link[3][1],
-             0, 1, 0, CM[3][2]+link[3][2],
-             0, 0, 0, 1;
+              1, 0, 0, 0.005752,
+              0, 1, 0, 0.000004,
+              0, 0, 1, 0.750492,
+              0, 0, 0, 1, //{0}->{4}
 
-    T0_45 << 0, 0, 1, CM[4][0]+link[4][0],
-             0, 1, 0, CM[4][1]+link[4][1],
-             -1,0, 0, CM[4][2]+link[4][2],
-             0, 0, 0, 1;
+              0, 0, 1, 0.047228,
+              0, 1, 0,-0.000196,
+              -1,0, 0, 0.687735,
+              0, 0, 0, 1, //{0}->{5}
 
-    T0_56 << 0, 0,-1, CM[5][0]+link[5][0],
-             0, 1, 0, CM[5][1]+link[5][1],
-             1, 0, 0, CM[5][2]+link[5][2],
-             0, 0, 0, 1;
+              1, 0, 0, 0.066930,
+              0, 1, 0,-0.000050,
+              0, 0, 1, 0.934660,
+              0, 0, 0, 1; //{0}->{6}
 
-    T1J << 1, 0, 0, -CM[0][0],
-           0, 1, 0, -CM[0][1],
-           0, 0, 1, -CM[0][2],
-           0, 0, 0, 1;
+    TJlist << 1, 0, 0, -CM[0][0],
+              0, 1, 0, -CM[0][1],
+              0, 0, 1, -CM[0][2],
+              0, 0, 0, 1, //{1}->{1J0}
 
-    T2J << 1, 0, 0, -CM[1][0],
-           0, 1, 0, -CM[1][1],
-           0, 0, 1, -CM[1][2],
-           0, 0, 0, 1;
+              1, 0, 0, -CM[1][0],
+              0, 1, 0, -CM[1][1],
+              0, 0, 1, -CM[1][2],
+              0, 0, 0, 1, //{2}->{2J1}
 
-    T3J << 1, 0, 0, -CM[2][0],
-           0, 1, 0, -CM[2][1],
-           0, 0, 1, -CM[2][2],
-           0, 0, 0, 1;
+              1, 0, 0, -CM[2][0],
+              0, 1, 0, -CM[2][1],
+              0, 0, 1, -CM[2][2],
+              0, 0, 0, 1, //{3}->{3J2}
 
-    T4J << 1, 0, 0, -CM[3][0],
-           0, 1, 0, -CM[3][1],
-           0, 0, 1, -CM[3][2],
-           0, 0, 0, 1;
+              1, 0, 0, -CM[3][0],
+              0, 1, 0, -CM[3][1],
+              0, 0, 1, -CM[3][2],
+              0, 0, 0, 1, //{4}->{4J3}
 
-    T5J << 1, 0, 0, -CM[4][0],
-           0, 1, 0, -CM[4][1],
-           0, 0, 1, -CM[4][2],
-           0, 0, 0, 1;
+              1, 0, 0, -CM[4][0],
+              0, 1, 0, -CM[4][1],
+              0, 0, 1, -CM[4][2],
+              0, 0, 0, 1, //{5}->{5J4}
 
-    T6J << 1, 0, 0, -CM[5][0],
-           0, 1, 0, -CM[5][1],
-           0, 0, 1, -CM[5][2],
-           0, 0, 0, 1;
+              1, 0, 0, -CM[5][0],
+              0, 1, 0, -CM[5][1],
+              0, 0, 1, -CM[5][2],
+              0, 0, 0, 1; //{6}->{6J5}
 
-    Ad1J = Adjoint(T1J);
-    Ad2J = Adjoint(T2J);
-    Ad3J = Adjoint(T3J);
-    Ad4J = Adjoint(T4J);
-    Ad5J = Adjoint(T5J);
-    Ad6J = Adjoint(T6J);
-    
+    MatrixXf Adtmp(6,6);
     VectorXf Ei(6);
     Ei << 0,0,1,0,0,0;
+
+    for (int i=0; i<6; i++)
+    {
+        Adtmp = Adjoint(TJlist.block<4,4>(i*4, 0));
+
+        AdJlist.block<6,6>(i*6 ,0) = Adtmp;
+
+        E_tilde_list.col(i) = Adtmp*Ei;
+    }
     
-    v1 = Ad1J*Ei;
-    v2 = Ad2J*Ei;
-    v3 = Ad3J*Ei;
-    v4 = Ad4J*Ei;
-    v5 = Ad5J*Ei;
-    v6 = Ad6J*Ei;
-    E_tilde_list << v1, v2, v3, v4, v5, v6;
-    E_tilde_dot_list << 0,0,0,0,0,0,
-                        0,0,0,0,0,0,
-                        0,0,0,0,0,0,
-                        0,0,0,0,0,0,
-                        0,0,0,0,0,0,
-                        0,0,0,0,0,0;
+    E_tilde_dot_list.setZero();
 
-    A1 << Inertia[0][0], Inertia[0][1], Inertia[0][2], 0, 0, 0,
-          Inertia[0][1], Inertia[0][3], Inertia[0][4], 0, 0, 0,
-          Inertia[0][2], Inertia[0][4], Inertia[0][5], 0, 0, 0,
-          0, 0, 0, Mass[0], 0, 0,
-          0, 0, 0, 0, Mass[0], 0,
-          0, 0, 0, 0, 0, Mass[0];
+    Alist << Inertia[0][0], Inertia[0][1], Inertia[0][2], 0, 0, 0,
+             Inertia[0][1], Inertia[0][3], Inertia[0][4], 0, 0, 0,
+             Inertia[0][2], Inertia[0][4], Inertia[0][5], 0, 0, 0,
+             0, 0, 0, Mass[0], 0, 0,
+             0, 0, 0, 0, Mass[0], 0,
+             0, 0, 0, 0, 0, Mass[0],
 
-    A2 << Inertia[1][0], Inertia[1][1], Inertia[1][2], 0, 0, 0,
-          Inertia[1][1], Inertia[1][3], Inertia[1][4], 0, 0, 0,
-          Inertia[1][2], Inertia[1][4], Inertia[1][5], 0, 0, 0,
-          0, 0, 0, Mass[1], 0, 0,
-          0, 0, 0, 0, Mass[1], 0,
-          0, 0, 0, 0, 0, Mass[1];
-    
-    A3 << Inertia[2][0], Inertia[2][1], Inertia[2][2], 0, 0, 0,
-          Inertia[2][1], Inertia[2][3], Inertia[2][4], 0, 0, 0,
-          Inertia[2][2], Inertia[2][4], Inertia[2][5], 0, 0, 0,
-          0, 0, 0, Mass[2], 0, 0,
-          0, 0, 0, 0, Mass[2], 0,
-          0, 0, 0, 0, 0, Mass[2];
+             Inertia[1][0], Inertia[1][1], Inertia[1][2], 0, 0, 0,
+             Inertia[1][1], Inertia[1][3], Inertia[1][4], 0, 0, 0,
+             Inertia[1][2], Inertia[1][4], Inertia[1][5], 0, 0, 0,
+             0, 0, 0, Mass[1], 0, 0,
+             0, 0, 0, 0, Mass[1], 0,
+             0, 0, 0, 0, 0, Mass[1];
 
-    A4 << Inertia[3][0], Inertia[3][1], Inertia[3][2], 0, 0, 0,
-          Inertia[3][1], Inertia[3][3], Inertia[3][4], 0, 0, 0,
-          Inertia[3][2], Inertia[3][4], Inertia[3][5], 0, 0, 0,
-          0, 0, 0, Mass[3], 0, 0,
-          0, 0, 0, 0, Mass[3], 0,
-          0, 0, 0, 0, 0, Mass[3];
+             Inertia[2][0], Inertia[2][1], Inertia[2][2], 0, 0, 0,
+             Inertia[2][1], Inertia[2][3], Inertia[2][4], 0, 0, 0,
+             Inertia[2][2], Inertia[2][4], Inertia[2][5], 0, 0, 0,
+             0, 0, 0, Mass[2], 0, 0,
+             0, 0, 0, 0, Mass[2], 0,
+             0, 0, 0, 0, 0, Mass[2];
+             
+             Inertia[3][0], Inertia[3][1], Inertia[3][2], 0, 0, 0,
+             Inertia[3][1], Inertia[3][3], Inertia[3][4], 0, 0, 0,
+             Inertia[3][2], Inertia[3][4], Inertia[3][5], 0, 0, 0,
+             0, 0, 0, Mass[3], 0, 0,
+             0, 0, 0, 0, Mass[3], 0,
+             0, 0, 0, 0, 0, Mass[3];
+             
+             Inertia[4][0], Inertia[4][1], Inertia[4][2], 0, 0, 0,
+             Inertia[4][1], Inertia[4][3], Inertia[4][4], 0, 0, 0,
+             Inertia[4][2], Inertia[4][4], Inertia[4][5], 0, 0, 0,
+             0, 0, 0, Mass[4], 0, 0,
+             0, 0, 0, 0, Mass[4], 0,
+             0, 0, 0, 0, 0, Mass[4];
 
-    A5 << Inertia[4][0], Inertia[4][1], Inertia[4][2], 0, 0, 0,
-          Inertia[4][1], Inertia[4][3], Inertia[4][4], 0, 0, 0,
-          Inertia[4][2], Inertia[4][4], Inertia[4][5], 0, 0, 0,
-          0, 0, 0, Mass[4], 0, 0,
-          0, 0, 0, 0, Mass[4], 0,
-          0, 0, 0, 0, 0, Mass[4];
+             Inertia[5][0], Inertia[5][1], Inertia[5][2], 0, 0, 0,
+             Inertia[5][1], Inertia[5][3], Inertia[5][4], 0, 0, 0,
+             Inertia[5][2], Inertia[5][4], Inertia[5][5], 0, 0, 0,
+             0, 0, 0, Mass[5], 0, 0,
+             0, 0, 0, 0, Mass[5], 0,
+             0, 0, 0, 0, 0, Mass[5];
 
-    A6 << Inertia[5][0], Inertia[5][1], Inertia[5][2], 0, 0, 0,
-          Inertia[5][1], Inertia[5][3], Inertia[5][4], 0, 0, 0,
-          Inertia[5][2], Inertia[5][4], Inertia[5][5], 0, 0, 0,
-          0, 0, 0, Mass[5], 0, 0,
-          0, 0, 0, 0, Mass[5], 0,
-          0, 0, 0, 0, 0, Mass[5];
 }
 
-void updateTlist(VectorXf theta)
+void updateFKList(VectorXf theta, VectorXf dtheta)
 {
-    T01 = expse3(lambda_list.col(0)*theta(0))*T0_01;
-    T12 = expse3(lambda_list.col(1)*theta(1))*T0_12;
-    T23 = expse3(lambda_list.col(2)*theta(2))*T0_23;
-    T34 = expse3(lambda_list.col(3)*theta(3))*T0_34;
-    T45 = expse3(lambda_list.col(4)*theta(4))*T0_45;
-    T56 = expse3(lambda_list.col(5)*theta(5))*T0_56;
+    Matrix4f Ttmp;
+
+    Ttmp.setIdentity();
+
+    for (int i=0; i<6; i++)
+    {
+        if (i==0)
+        {
+            Ttmp = expse3(lambda_list.col(i)*theta(i))*T0list.block<4,4>(i*4, 0);
+        }
+        else
+        {
+            Ttmp = Tinv(T0list.block<4,4>((i-1)*4, 0))*expse3(lambda_list.col(i)*theta(i))*T0list.block<4,4>(i*4, 0);
+        }
+
+        Tlist.block<4,4>(i*4, 0) = Ttmp;
+
+        Adlist.block<6,6>(i*6, 0) = Adjoint(Ttmp);
+
+        adlist.block<6,6>(i*6, 0) = adjop(E_tilde_list.col(i)*dtheta(i));
+    }
 }
 
-void updateAdlist()
+MatrixXf systemInertia()
 {
-    Ad01 = Adjoint(T01);
-    Ad12 = Adjoint(T12);
-    Ad23 = Adjoint(T23);
-    Ad34 = Adjoint(T34);
-    Ad45 = Adjoint(T45);
-    Ad56 = Adjoint(T56);
+    MatrixXf M(6,6);
+    MatrixXf Ad(6,6);
+
+    Astarlist.block<6,6>(30,0) = Alist.block<6,6>(30,0);
+
+    for (int i=5; i>0; i--)
+    {
+        Ad = Adlist.block<6,6>(i*6, 0);
+        Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*Astarlist.block<6,6>(i*6,0)*InvAd(Ad);
+    }
+
+    for (int i=0; i<6; i++)
+    {
+        Ad.setIdentity();
+        for (int j=i; j<6; j++)
+        {
+            if (j>=i+1) Ad = Ad * Adlist.block<6,6>(j*6, 0);
+            M(i,j) = E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Astarlist.block<6,6>(j*6,0) * E_tilde_list.col(j);
+
+            if (i != j)
+            {
+                M(j,i) = M(i,j);
+            }
+        }
+    }
+    return M;
 }
 
-void updateadlist(VectorXf dtheta)
+VectorXf systemGravity()
 {
-    ad01 = adjop(E_tilde_list.col(0)*dtheta(0));
-    ad12 = adjop(E_tilde_list.col(1)*dtheta(1));
-    ad23 = adjop(E_tilde_list.col(2)*dtheta(2));
-    ad34 = adjop(E_tilde_list.col(3)*dtheta(3));
-    ad45 = adjop(E_tilde_list.col(4)*dtheta(4));
-    ad56 = adjop(E_tilde_list.col(5)*dtheta(5));
+    VectorXf G(6);
+    VectorXf gref(6);
+    VectorXf gtmp(6);
+    MatrixXf Ad(6,6);
+    MatrixXf g(6,6);
+
+    float tmp;
+
+    gref << 0,0,0,0,0,-9.81;
+
+    for (int i=0; i<6; i++)
+    {
+        Ad = Adlist.block<6,6>(i*6, 0);
+
+        if (i==0) gtmp = InvAd(Ad) * gref;
+        else gtmp = InvAd(Ad) * gtmp;
+        g.col(i) = gtmp;
+    }
+
+    for (int i=0; i<6; i++) 
+    {
+        tmp = 0;
+        Ad.setIdentity();
+        for (int j=i; j<6; j++)
+        {
+            if (j>=i+1) Ad = Ad * Adlist.block<6,6>(j*6, 0);
+            
+            tmp = tmp + E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Alist.block<6,6>(j*6, 0) * g.col(j);
+        }
+        G(i) = -tmp;
+    }
+    return G;
 }
-
-
-
-// VectorXf systemGravity()
-// {
-//     VectorXf G(6);
-//     VectorXf g_ref(6);
-//     MatrixXf g(6,6);
-//     g_ref << 0,0,0,0,0,-9.81;
-
-//     for (int i=0; i<6; i++) 
-//     {
-
-//     }
-// }
