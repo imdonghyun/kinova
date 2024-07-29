@@ -3,4 +3,5 @@
 
 CMakeFiles/Robotics.dir/Robotics.cpp.o: ../Robotics.cpp
 CMakeFiles/Robotics.dir/Robotics.cpp.o: ../Robotics.h
+CMakeFiles/Robotics.dir/Robotics.cpp.o: ../config.h
 
