@@ -284,6 +284,11 @@ void setConstant()
     lambda_list << v1, v2, v3, v4, v5, v6;
     // std::cout << lambda_list << std::endl;
 
+    M << 1,0,0,0.057,
+         0,1,0,-0.01,
+         0,0,1,1.0033,
+         0,0,0,1;
+
     Matrix4f T;
     Matrix4f Ttmp;
     Vector4f CMtmp;
@@ -437,13 +442,16 @@ int main()
 
     setConstant();
     updateFKList(q, qdot);
-    // for (int i=0; i<6; i++)
-    // {
-    //     T = T * Tlist.block<4,4>(i*4, 0);
-    //     std::cout << T << std::endl << std::endl;
-    // }
+    for (int i=0; i<6; i++)
+    {
+        // T = T * Tlist.block<4,4>(i*4, 0);
+        // std::cout << T << std::endl << std::endl;
+        T = T * expse3(lambda_list.col(i)*q(i));
+    }
+    T = T*M;
+    std::cout << T << std::endl;
     // g = systemGravity();
     // std::cout << g << std::endl;
-    std::cout << T0list <<std::endl;
+    // std::cout << T0list <<std::endl;
     
 }

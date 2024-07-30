@@ -40,6 +40,8 @@ MatrixXf E_tilde_dot_list(6,6);
 
 MatrixXf lambda_list(6,6);
 
+MatrixXf M(4,4);
+
 MatrixXf T0list(24,4);
 
 MatrixXf Tlist(24,4);
