@@ -1,6 +1,27 @@
 #include <iostream>
 #include "Robotics.h"
 
+/*
+R: rotation matrix
+T: homogeneous transform matrix
+w: angular velocity
+v: linear velocity
+V: body twist
+
+T0list: transform matrix from CoM to CoM at initial state
+TJlist: transform matrix from CoM to joint
+Tlist: transform matrix from CoM ti CoM after rotation
+
+E_list: joint matrix about joint
+E_tilde_list: joint matrix about CoM
+lambda_list: screw from {0} to {iJ(i-1)}
+
+Alist: inertia matrix
+*/
+
+
+
+
 bool isZero(float value)
 {
     if (abs(value)<0.000001) return true;
@@ -233,6 +254,17 @@ MatrixXf adjop(VectorXf V)
     return adV;
 }
 
+MatrixXf getInertia(int i)
+{
+    Matrix3f Ib;
+
+    Ib << Inertia[i][0], Inertia[i][1], Inertia[i][2],
+          Inertia[i][1], Inertia[i][3], Inertia[i][4],
+          Inertia[i][2], Inertia[i][4], Inertia[i][5];
+
+    return Ib;
+}
+
 void setConstant()
 {
     VectorXf v1(6);
@@ -242,139 +274,68 @@ void setConstant()
     VectorXf v5(6);
     VectorXf v6(6);
 
-    v1 << 0,0,1,0,0,0;
-    v2 << 0,0,1,-0.03,0,0;
-    v3 << 0,0,1,0.28,0,0;
-    v4 << 0,0,1,-0.14,0,0;
-    v5 << 0,0,1,0,-0.285,0;
-    v6 << 0,0,1,0,0.105,0;
+    v1 << 0, 0, 1, 0, 0, 0;
+    v2 << 0,-1, 0, 0.2433, 0, 0;
+    v3 << 0, 1, 0, -0.5233, 0, 0;
+    v4 << 0, 0, 1, -0.01, 0, 0;
+    v5 << 1, 0, 0, 0, 0.7683, 0.01;
+    v6 << 0, 0, 1, -0.01, -0.057, 0;
 
     lambda_list << v1, v2, v3, v4, v5, v6;
+    // std::cout << lambda_list << std::endl;
 
-    T0list << 1, 0, 0, 0.000025,
-              0, 1, 0, 0.022135,
-              0, 0, 1, 0.227677,
-              0, 0, 0, 1, //{0}->{1}
+    Matrix4f T;
+    Matrix4f Ttmp;
+    Vector4f CMtmp;
+    T.setIdentity();
 
-              1, 0, 0, 0.029983,
-              0, 0,-1,-0.075303,
-              0, 1, 0, 0.484850,
-              0, 0, 0, 1, //{0}->{2}
+    for (int i=0; i<6; i++)
+    {
+        for (int j=0; j<4; j++)
+        {
+            for (int k=0; k<4; k++)
+            {
+                Ttmp(j,k) = tf_list[i][j][k];
+            }
+        }
+        T = T*Ttmp;
+        CMtmp << CM[i][0], CM[i][1], CM[i][2], 1;
 
-              1, 0, 0, 0.030156,
-              0, 0, 1,-0.022644,
-              0,-1, 0, 0.618322,
-              0, 0, 0, 1, //{0}->{3}
+        T0list.block<3,3>(i*4, 0) = T.block<3,3>(0,0);
+        T0list.block<1,3>(i*4+3, 0).setZero();
+        T0list.block<4,1>(i*4, 3) = T*CMtmp;
 
-              1, 0, 0, 0.005752,
-              0, 1, 0, 0.000004,
-              0, 0, 1, 0.750492,
-              0, 0, 0, 1, //{0}->{4}
+        TJlist.block<4,4>(i*4, 0).setIdentity();
+        TJlist.block<3,1>(i*4, 3) << -CM[i][0], -CM[i][1], -CM[i][2];
+    }
 
-              0, 0, 1, 0.047228,
-              0, 1, 0,-0.000196,
-              -1,0, 0, 0.687735,
-              0, 0, 0, 1, //{0}->{5}
-
-              1, 0, 0, 0.066930,
-              0, 1, 0,-0.000050,
-              0, 0, 1, 0.934660,
-              0, 0, 0, 1; //{0}->{6}
-
-    TJlist << 1, 0, 0, -CM[0][0],
-              0, 1, 0, -CM[0][1],
-              0, 0, 1, -CM[0][2],
-              0, 0, 0, 1, //{1}->{1J0}
-
-              1, 0, 0, -CM[1][0],
-              0, 1, 0, -CM[1][1],
-              0, 0, 1, -CM[1][2],
-              0, 0, 0, 1, //{2}->{2J1}
-
-              1, 0, 0, -CM[2][0],
-              0, 1, 0, -CM[2][1],
-              0, 0, 1, -CM[2][2],
-              0, 0, 0, 1, //{3}->{3J2}
-
-              1, 0, 0, -CM[3][0],
-              0, 1, 0, -CM[3][1],
-              0, 0, 1, -CM[3][2],
-              0, 0, 0, 1, //{4}->{4J3}
-
-              1, 0, 0, -CM[4][0],
-              0, 1, 0, -CM[4][1],
-              0, 0, 1, -CM[4][2],
-              0, 0, 0, 1, //{5}->{5J4}
-
-              1, 0, 0, -CM[5][0],
-              0, 1, 0, -CM[5][1],
-              0, 0, 1, -CM[5][2],
-              0, 0, 0, 1; //{6}->{6J5}
-
-    MatrixXf Adtmp(6,6);
+    MatrixXf tmp(6,6);
     VectorXf Ei(6);
     Ei << 0,0,1,0,0,0;
 
     for (int i=0; i<6; i++)
     {
-        Adtmp = Adjoint(TJlist.block<4,4>(i*4, 0));
+        tmp = Adjoint(TJlist.block<4,4>(i*4, 0));
 
-        AdJlist.block<6,6>(i*6 ,0) = Adtmp;
+        AdJlist.block<6,6>(i*6 ,0) = tmp;
 
-        E_tilde_list.col(i) = Adtmp*Ei;
+        E_tilde_list.col(i) = tmp*Ei;
     }
     
     E_tilde_dot_list.setZero();
 
-    Alist << Inertia[0][0], Inertia[0][1], Inertia[0][2], 0, 0, 0,
-             Inertia[0][1], Inertia[0][3], Inertia[0][4], 0, 0, 0,
-             Inertia[0][2], Inertia[0][4], Inertia[0][5], 0, 0, 0,
-             0, 0, 0, Mass[0], 0, 0,
-             0, 0, 0, 0, Mass[0], 0,
-             0, 0, 0, 0, 0, Mass[0],
-
-             Inertia[1][0], Inertia[1][1], Inertia[1][2], 0, 0, 0,
-             Inertia[1][1], Inertia[1][3], Inertia[1][4], 0, 0, 0,
-             Inertia[1][2], Inertia[1][4], Inertia[1][5], 0, 0, 0,
-             0, 0, 0, Mass[1], 0, 0,
-             0, 0, 0, 0, Mass[1], 0,
-             0, 0, 0, 0, 0, Mass[1];
-
-             Inertia[2][0], Inertia[2][1], Inertia[2][2], 0, 0, 0,
-             Inertia[2][1], Inertia[2][3], Inertia[2][4], 0, 0, 0,
-             Inertia[2][2], Inertia[2][4], Inertia[2][5], 0, 0, 0,
-             0, 0, 0, Mass[2], 0, 0,
-             0, 0, 0, 0, Mass[2], 0,
-             0, 0, 0, 0, 0, Mass[2];
-             
-             Inertia[3][0], Inertia[3][1], Inertia[3][2], 0, 0, 0,
-             Inertia[3][1], Inertia[3][3], Inertia[3][4], 0, 0, 0,
-             Inertia[3][2], Inertia[3][4], Inertia[3][5], 0, 0, 0,
-             0, 0, 0, Mass[3], 0, 0,
-             0, 0, 0, 0, Mass[3], 0,
-             0, 0, 0, 0, 0, Mass[3];
-             
-             Inertia[4][0], Inertia[4][1], Inertia[4][2], 0, 0, 0,
-             Inertia[4][1], Inertia[4][3], Inertia[4][4], 0, 0, 0,
-             Inertia[4][2], Inertia[4][4], Inertia[4][5], 0, 0, 0,
-             0, 0, 0, Mass[4], 0, 0,
-             0, 0, 0, 0, Mass[4], 0,
-             0, 0, 0, 0, 0, Mass[4];
-
-             Inertia[5][0], Inertia[5][1], Inertia[5][2], 0, 0, 0,
-             Inertia[5][1], Inertia[5][3], Inertia[5][4], 0, 0, 0,
-             Inertia[5][2], Inertia[5][4], Inertia[5][5], 0, 0, 0,
-             0, 0, 0, Mass[5], 0, 0,
-             0, 0, 0, 0, Mass[5], 0,
-             0, 0, 0, 0, 0, Mass[5];
-
+    for (int i=0; i<6; i++)
+    {
+        tmp.setZero();
+        tmp.topLeftCorner(3,3) = getInertia(i);
+        tmp.bottomRightCorner(3,3) = MatrixXf::Identity(3,3) * Mass[i];
+        Alist.block<6,6>(i*6, 0) = tmp;
+    }
 }
 
 void updateFKList(VectorXf theta, VectorXf dtheta)
 {
     Matrix4f Ttmp;
-
-    Ttmp.setIdentity();
 
     for (int i=0; i<6; i++)
     {
@@ -459,4 +420,30 @@ VectorXf systemGravity()
         G(i) = -tmp;
     }
     return G;
+}
+
+int main()
+{
+    VectorXf q(6);
+    VectorXf qdot(6);
+    VectorXf g(6);
+    Matrix4f T;
+    T.setIdentity();
+
+    q << 0, 0, -135, 90, 0, 0;
+    //0.4 1.3 -3.1 0.6 -0.3 -0.06
+    q = q*M_PI/180;
+    qdot.setZero();
+
+    setConstant();
+    updateFKList(q, qdot);
+    // for (int i=0; i<6; i++)
+    // {
+    //     T = T * Tlist.block<4,4>(i*4, 0);
+    //     std::cout << T << std::endl << std::endl;
+    // }
+    // g = systemGravity();
+    // std::cout << g << std::endl;
+    std::cout << T0list <<std::endl;
+    
 }
