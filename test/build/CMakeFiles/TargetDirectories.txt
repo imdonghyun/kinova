@@ -1,3 +1,3 @@
 /home/ctrl/kinova/test/build/CMakeFiles/rebuild_cache.dir
-/home/ctrl/kinova/test/build/CMakeFiles/Robotics.dir
+/home/ctrl/kinova/test/build/CMakeFiles/current_control.dir
 /home/ctrl/kinova/test/build/CMakeFiles/edit_cache.dir

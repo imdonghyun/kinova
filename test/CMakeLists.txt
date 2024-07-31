@@ -225,7 +225,7 @@ endif()
 
 # Create executable for each example
 # Look for examples under folders
-#file(GLOB EXE_LIST RELATIVE ${PROJECT_SOURCE_DIR} "[0-9]*-*/[0-9]*.cpp")
+# file(GLOB EXE_LIST RELATIVE ${PROJECT_SOURCE_DIR} "[0-9]*-*/[0-9]*.cpp")
 # file(GLOB EXE_LIST RELATIVE ${PROJECT_SOURCE_DIR} "current_control/*.cpp")
 # foreach ( SRC_FILE ${EXE_LIST} )
 
@@ -237,4 +237,5 @@ endif()
 #   add_executable(${TARGET_EXE_NAME} ${SRC_FILE} utils.cpp)
   
 # endforeach()
-add_executable(Robotics Robotics.cpp)
+# add_executable(Robotics Robotics.cpp)
+add_executable(current_control current_control/current_control.cpp utils.cpp Robotics.cpp)

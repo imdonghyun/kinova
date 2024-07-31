@@ -25,12 +25,14 @@
 #include <time.h>
 
 
+
+
 namespace k_api = Kinova::Api;
 
 #define PORT 10000
 #define PORT_REAL_TIME 10001
 
-#define DURATION 1             // Network timeout (seconds)
+#define DURATION 5             // Network timeout (seconds)
 
 // Waiting time during actions
 const auto ACTION_WAITING_TIME = std::chrono::seconds(1);
@@ -92,6 +94,7 @@ class Robotarm
     void move_to_home_position();
 
     void set_current_mode();
+    void set_position_mode();
     bool current_control();
 
     void get_position();

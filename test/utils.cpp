@@ -1,5 +1,5 @@
 #include "utils.h"
-
+#include "Robotics.h"
 
 std::function<void(k_api::Base::ActionNotification)>
 Robotarm::check_for_end_or_abort(bool& finished)
@@ -86,6 +86,26 @@ void Robotarm::move_to_home_position()
     }
 }
 
+void Robotarm::set_position_mode()
+{
+    auto control_mode_message = k_api::ActuatorConfig::ControlModeInformation();
+    control_mode_message.set_control_mode(k_api::ActuatorConfig::ControlMode::POSITION);
+
+    //1~5: 1번 ~ 5번 조인트, 7: 6번 조인트
+    actuator_config->SetControlMode(control_mode_message, 1);
+    actuator_config->SetControlMode(control_mode_message, 2);
+    actuator_config->SetControlMode(control_mode_message, 3);
+    actuator_config->SetControlMode(control_mode_message, 4);
+    actuator_config->SetControlMode(control_mode_message, 5);
+    actuator_config->SetControlMode(control_mode_message, 7);
+
+    for(int i = 0; i < actuator_count; i++)
+    {
+        pos_d[i] = base_feedback.actuators(i).position();
+        base_command.mutable_actuators(i)->set_position(pos_d[i]);
+    }
+}
+
 void Robotarm::set_current_mode()
 {
     servoingMode.set_servoing_mode(k_api::Base::ServoingMode::LOW_LEVEL_SERVOING);
@@ -102,12 +122,38 @@ void Robotarm::set_current_mode()
     control_mode_message.set_control_mode(k_api::ActuatorConfig::ControlMode::CURRENT);
 
     //1~5: 1번 ~ 5번 조인트, 7: 6번 조인트
-    // actuator_config->SetControlMode(control_mode_message, 1);
-    // actuator_config->SetControlMode(control_mode_message, 2);
-    // actuator_config->SetControlMode(control_mode_message, 3);
-    // actuator_config->SetControlMode(control_mode_message, 4);
+    actuator_config->SetControlMode(control_mode_message, 1);
+    actuator_config->SetControlMode(control_mode_message, 2);
+    actuator_config->SetControlMode(control_mode_message, 3);
+    actuator_config->SetControlMode(control_mode_message, 4);
     actuator_config->SetControlMode(control_mode_message, 5);
-    // actuator_config->SetControlMode(control_mode_message, 7);
+    actuator_config->SetControlMode(control_mode_message, 7);
+}
+
+void Robotarm::scheme()
+{
+    VectorXf g(6);
+    VectorXf q(6);
+    VectorXf qdot(6);
+
+    qdot.setZero();
+    
+    
+    // std::cout << pos_p << std::endl;
+    for (int i=0; i<6; i++)
+    {
+        q(i) = pos_p[i]*M_1_PI/180;
+    }
+    // std::cout << q << std::endl;
+    updateFKList(q, qdot);
+    g = systemGravity();
+
+    // std::cout << g << std::endl << std::endl;
+
+    for (int i=0; i<6; i++)
+    {
+        cur_d[i] = g(i) / Kt[i];
+    }
 }
 
 bool Robotarm::current_control()
@@ -116,9 +162,6 @@ bool Robotarm::current_control()
     int timer_count = 0;
     int64_t now = 0;
     int64_t last = 0;
-    float cur_init = 1.5;
-    float cur;
-    float pos = base_feedback.actuators(4).position();
 
     int timeout = 0;
 
@@ -126,6 +169,7 @@ bool Robotarm::current_control()
     try
     {
         set_current_mode();
+        setConstant();
 
         // Define the callback function used in Refresh_callback
         // auto lambda_fct_callback = [](const Kinova::Api::Error &err, const k_api::BaseCyclic::Feedback data)
@@ -140,32 +184,26 @@ bool Robotarm::current_control()
         // Real-time loop
         
         
-        // while(timer_count < (time_duration * 1000))
-        while(1)
+        while(timer_count < (time_duration * 1000))
+        // while(1)
         {
             now = GetTickUs();
             if(now - last > 1000)
             {
-                get_current();
-                get_velocity();
                 get_position();
-
-                cur = cur_init + 0.5*(pos - pos_p[4]) - 0.05*vel_p[4];
-                std::cout << pos << " " << pos_p[4] << " " << cur_p[4] << std::endl;
-                std::cout << cur << std::endl;
-                base_command.mutable_actuators(4)->set_position(pos_p[4]);
-                base_command.mutable_actuators(4)->set_current_motor(cur);
+                scheme();
                 // 0~5: 1번 ~ 6번 joint
-            
-                // for (int i=0; i<actuator_count; i++) 
-                // {
-                //     // float p = base_feedback.actuators(i).position();
-                //     // std::cout << p << std::endl;
-                //     std::cout << pos_p[i] << " " << vel_p[i] << " " << cur_p[i] << std::endl;
-                //     base_command.mutable_actuators(i)->set_position(pos_p[i]);
-                //     // base_command.mutable_actuators(i)->clear_current_motor();
-                // } std::cout << std::endl;
-                
+                for (int i=0; i<actuator_count; i++) 
+                {
+                    // std::cout << cur_d[i] << " ";
+                    base_command.mutable_actuators(i)->set_position(pos_p[i]);
+                    base_command.mutable_actuators(i)->set_current_motor(cur_d[i]);
+
+                    cur_p[i] = base_feedback.actuators(i).current_motor();
+                    std::cout << cur_p[i] << std::endl;
+
+                }
+                std::cout << std::endl;
                 try
                 {
                     // base_cyclic->Refresh_callback(base_command, lambda_fct_callback, 0);
@@ -191,7 +229,14 @@ bool Robotarm::current_control()
         std::cout << "Runtime error: " << ex2.what() << std::endl;
         return_status = false;
     }
- 
+    
+    set_position_mode();
+    // for (int i=0; i<3000000; i++);
+    // for(int i = 0; i < actuator_count; i++)
+    // {
+    //     cur_p[i] = base_feedback.actuators(i).current_motor();
+    //     std::cout << cur_p[i] << " ";
+    // }
     // Set back the servoing mode to Single Level Servoing
     servoingMode.set_servoing_mode(k_api::Base::ServoingMode::SINGLE_LEVEL_SERVOING);
     base->SetServoingMode(servoingMode);

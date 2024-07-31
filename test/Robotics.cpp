@@ -8,9 +8,13 @@ w: angular velocity
 v: linear velocity
 V: body twist
 
-T0list: transform matrix from CoM to CoM at initial state
-TJlist: transform matrix from CoM to joint
-Tlist: transform matrix from CoM ti CoM after rotation
+{0}: base frame
+{i}: ith link CoM frame
+{iJi-1}: ith joint frame
+T0list: transform matrix from {0} to {i} at initial state
+TJlist: transform matrix from {i} to {iJi-1}
+Tlist: transform matrix from {i-1} to {i} after rotation
+M: initial endeffector frame from {0}
 
 E_list: joint matrix about joint
 E_tilde_list: joint matrix about CoM
@@ -19,7 +23,31 @@ lambda_list: screw from {0} to {iJ(i-1)}
 Alist: inertia matrix
 */
 
+MatrixXf E_list(4,4);
 
+MatrixXf E_tilde_list(6,6);
+
+MatrixXf E_tilde_dot_list(6,6);
+
+MatrixXf lambda_list(6,6);
+
+MatrixXf M(4,4);
+
+MatrixXf T0list(24,4);
+
+MatrixXf Tlist(24,4);
+
+MatrixXf TJlist(24,4);
+
+MatrixXf Adlist(36,6);
+
+MatrixXf AdJlist(36,6);
+
+MatrixXf adlist(36,6);
+
+MatrixXf Alist(36,6);
+
+MatrixXf Astarlist(36,6);
 
 
 bool isZero(float value)
@@ -282,7 +310,6 @@ void setConstant()
     v6 << 0, 0, 1, -0.01, -0.057, 0;
 
     lambda_list << v1, v2, v3, v4, v5, v6;
-    // std::cout << lambda_list << std::endl;
 
     M << 1,0,0,0.057,
          0,1,0,-0.01,
@@ -326,7 +353,7 @@ void setConstant()
 
         E_tilde_list.col(i) = tmp*Ei;
     }
-    
+
     E_tilde_dot_list.setZero();
 
     for (int i=0; i<6; i++)
@@ -427,31 +454,32 @@ VectorXf systemGravity()
     return G;
 }
 
-int main()
-{
-    VectorXf q(6);
-    VectorXf qdot(6);
-    VectorXf g(6);
-    Matrix4f T;
-    T.setIdentity();
+// int main()
+// {
+//     VectorXf q(6);
+//     VectorXf qdot(6);
+//     VectorXf g(6);
+//     Matrix4f T;
+//     T.setIdentity();
 
-    q << 0, 0, -135, 90, 0, 0;
-    //0.4 1.3 -3.1 0.6 -0.3 -0.06
-    q = q*M_PI/180;
-    qdot.setZero();
+//     q << 0, 0, -135, 90, 0, 0;
+//     //0.4 1.3 -3.1 0.6 -0.3 -0.06
+//     // q << 0, 0, -90, 0, 0, 0;
+//     q = q*M_PI/180;
+//     qdot.setZero();
 
-    setConstant();
-    updateFKList(q, qdot);
-    for (int i=0; i<6; i++)
-    {
-        // T = T * Tlist.block<4,4>(i*4, 0);
-        // std::cout << T << std::endl << std::endl;
-        T = T * expse3(lambda_list.col(i)*q(i));
-    }
-    T = T*M;
-    std::cout << T << std::endl;
-    // g = systemGravity();
-    // std::cout << g << std::endl;
-    // std::cout << T0list <<std::endl;
+//     setConstant();
+//     updateFKList(q, qdot);
+//     // for (int i=0; i<6; i++)
+//     // {
+//         // T = T * Tlist.block<4,4>(i*4, 0);
+//         // std::cout << T << std::endl << std::endl;
+//         // T = T * expse3(lambda_list.col(i)*q(i));
+//     // }
+//     // T = T*M;
+//     // std::cout << Tlist << std::endl;
+//     g = systemGravity();
+//     std::cout << g << std::endl;
+//     // std::cout << T0list <<std::endl;
     
-}
+// }

@@ -1,8 +1,9 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <Eigen/Dense>
-#include <unsupported/Eigen/CXX11/Tensor>
 #include "config.h"
+
+
 
 using namespace Eigen;
 
@@ -30,30 +31,20 @@ VectorXf logSE3(MatrixXf T);
 
 MatrixXf Adjoint(MatrixXf T);
 
+MatrixXf InvAd(MatrixXf Ad);
+
+MatrixXf InvTransAd(MatrixXf Ad);
+
+MatrixXf getInertia(int i);
+
+void setConstant();
+
+void updateFKList(VectorXf theta, VectorXf dtheta);
+
+MatrixXf systemInertia();
+
+VectorXf systemGravity();
+
 MatrixXf adjop(VectorXf V);
 
-MatrixXf E_list(4,4);
 
-MatrixXf E_tilde_list(6,6);
-
-MatrixXf E_tilde_dot_list(6,6);
-
-MatrixXf lambda_list(6,6);
-
-MatrixXf M(4,4);
-
-MatrixXf T0list(24,4);
-
-MatrixXf Tlist(24,4);
-
-MatrixXf TJlist(24,4);
-
-MatrixXf Adlist(36,6);
-
-MatrixXf AdJlist(36,6);
-
-MatrixXf adlist(36,6);
-
-MatrixXf Alist(36,6);
-
-MatrixXf Astarlist(36,6);
