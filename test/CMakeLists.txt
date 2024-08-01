@@ -237,5 +237,5 @@ endif()
 #   add_executable(${TARGET_EXE_NAME} ${SRC_FILE} utils.cpp)
   
 # endforeach()
-# add_executable(Robotics Robotics.cpp)
-add_executable(current_control current_control/current_control.cpp utils.cpp Robotics.cpp)
+add_executable(Robotics Robotics.cpp)
+# add_executable(current_control current_control/current_control.cpp utils.cpp Robotics.cpp)

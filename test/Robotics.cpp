@@ -9,18 +9,24 @@ v: linear velocity
 V: body twist
 
 {0}: base frame
-{i}: ith link CoM frame
-{iJi-1}: ith joint frame
-T0list: transform matrix from {0} to {i} at initial state
-TJlist: transform matrix from {i} to {iJi-1}
-Tlist: transform matrix from {i-1} to {i} after rotation
-M: initial endeffector frame from {0}
+idx: i=0~5
+link: n=1~6
+{n}: nth link CoM frame
+{nJn-1}: nth joint frame
+T0list: transform matrix from {0} to {i+1} at initial state
+TJlist: transform matrix from {i+1} to {(i+1)Ji}
+Tlist: transform matrix from {i} to {i+1} after rotation
+M0: initial endeffector frame from {0}
 
 E_list: joint matrix about joint
 E_tilde_list: joint matrix about CoM
-lambda_list: screw from {0} to {iJ(i-1)}
+lambda_list: screw from {0} to {(i+1)Ji}
+Adlist: Adjoint matrix from {i} to {i+1} 
+AdJlist: Adjoint matrix from {i+1} to {(i+1)Ji}
+adlist: adjoint operator from {i} to {i+1} 
 
 Alist: inertia matrix
+Astarlist: accumulated inertia matrix
 */
 
 MatrixXf E_list(4,4);
@@ -31,7 +37,7 @@ MatrixXf E_tilde_dot_list(6,6);
 
 MatrixXf lambda_list(6,6);
 
-MatrixXf M(4,4);
+MatrixXf M0(4,4);
 
 MatrixXf T0list(24,4);
 
@@ -47,7 +53,7 @@ MatrixXf adlist(36,6);
 
 MatrixXf Alist(36,6);
 
-MatrixXf Astarlist(36,6);
+
 
 
 bool isZero(float value)
@@ -66,7 +72,7 @@ MatrixXf Tinv(MatrixXf T)
     Tinv.setIdentity();
 
     Rinv = T.block<3,3>(0,0).transpose();
-    p << T(0,3), T(1,3), T(2,3);
+    p = T.block<3,1>(0,3);
 
     Tinv.block<3,3>(0,0) = Rinv;
     Tinv.block<3,1>(0,3) = -Rinv * p;
@@ -213,7 +219,7 @@ VectorXf logSE3(MatrixXf T)
     VectorXf v(3);
     VectorXf p(3);
 
-    p << T(0,3), T(1,3), T(2,3);
+    p = T.block<3,1>(0,3);
     w = logSO3(T.block<3,3>(0,0));
     v = dexpso3inv(w) * p;
     V.head(3) = w;
@@ -230,7 +236,7 @@ MatrixXf Adjoint(MatrixXf T)
 
     
     R = T.block<3,3>(0,0);
-    p << T(0,3), T(1,3), T(2,3);
+    p = T.block<3,1>(0,3);
 
     AdT.block<3,3>(0,0) = R;
     AdT.block<3,3>(0,3).setZero();
@@ -311,10 +317,10 @@ void setConstant()
 
     lambda_list << v1, v2, v3, v4, v5, v6;
 
-    M << 1,0,0,0.057,
-         0,1,0,-0.01,
-         0,0,1,1.0033,
-         0,0,0,1;
+    M0 << 1,0,0,0.057,
+          0,1,0,-0.01,
+          0,0,1,1.0033,
+          0,0,0,1;
 
     Matrix4f T;
     Matrix4f Ttmp;
@@ -365,7 +371,7 @@ void setConstant()
     }
 }
 
-void updateFKList(VectorXf theta, VectorXf dtheta)
+void updateFKList(VectorXf q, VectorXf dq)
 {
     Matrix4f Ttmp;
 
@@ -373,18 +379,18 @@ void updateFKList(VectorXf theta, VectorXf dtheta)
     {
         if (i==0)
         {
-            Ttmp = expse3(lambda_list.col(i)*theta(i))*T0list.block<4,4>(i*4, 0);
+            Ttmp = expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4, 0);
         }
         else
         {
-            Ttmp = Tinv(T0list.block<4,4>((i-1)*4, 0))*expse3(lambda_list.col(i)*theta(i))*T0list.block<4,4>(i*4, 0);
+            Ttmp = Tinv(T0list.block<4,4>((i-1)*4, 0))*expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4, 0);
         }
 
         Tlist.block<4,4>(i*4, 0) = Ttmp;
 
         Adlist.block<6,6>(i*6, 0) = Adjoint(Ttmp);
 
-        adlist.block<6,6>(i*6, 0) = adjop(E_tilde_list.col(i)*dtheta(i));
+        adlist.block<6,6>(i*6, 0) = adjop(E_tilde_list.col(i)*dq(i));
     }
 }
 
@@ -392,6 +398,7 @@ MatrixXf systemInertia()
 {
     MatrixXf M(6,6);
     MatrixXf Ad(6,6);
+    MatrixXf Astarlist(36,6);
 
     Astarlist.block<6,6>(30,0) = Alist.block<6,6>(30,0);
 
@@ -416,6 +423,69 @@ MatrixXf systemInertia()
         }
     }
     return M;
+}
+
+MatrixXf systemBias(VectorXf dq)
+{
+    MatrixXf C(6,6);
+    MatrixXf ad(6,6);
+    MatrixXf Blist(36,6);
+    MatrixXf Bstarlist(36,6);
+    MatrixXf Astarlist(36,6);
+    MatrixXf Ad(6,6);
+    MatrixXf Astar(6,6);
+    MatrixXf Bstar(6,6);
+    MatrixXf tmp(6,6);
+    VectorXf V(6);
+    VectorXf Ei(6);
+    VectorXf Ej(6);
+    V.setZero();
+
+    for (int i=0; i<6; i++)
+    {
+        V = InvAd(Adlist.block<6,6>(i*6,0))*V + E_tilde_list*dq;
+        ad = adjop(V);
+        Blist.block<6,6>(i*6,0) = Alist.block<6,6>(i*6,0)*ad - ad.transpose()*Alist.block<6,6>(i*6,0);
+    }
+
+    Astarlist.block<6,6>(30,0) = Alist.block<6,6>(30,0);
+    Bstarlist.block<6,6>(30,0) = Blist.block<6,6>(30,0);
+
+    for (int i=5; i>0; i--)
+    {
+        tmp = Astarlist.block<6,6>(i*6,0);
+        Ad = Adlist.block<6,6>(i*6, 0);
+        Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad) * tmp * InvAd(Ad);
+        Bstarlist.block<6,6>((i-1)*6,0) = Blist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*(Bstarlist.block<6,6>(i*6,0) - tmp*adlist.block<6,6>(i*6,0))*InvAd(Ad);
+    }
+
+    for (int i=0; i<6; i++)
+    {
+        Ad.setIdentity();
+        ad.setIdentity();
+        Ei = E_tilde_list.col(i);
+
+        for (int j=i; j<6; j++)
+        {
+            Astar = Astarlist.block<6,6>(j*6,0);
+            Bstar = Bstarlist.block<6,6>(j*6,0);
+            Ej = E_tilde_list.col(j);
+            if (j>=i+1) 
+            {
+                tmp = Adlist.block<6,6>(j*6, 0);
+                Ad = Ad * tmp;
+                ad = adlist.block<6,6>(j*6,0) + InvAd(tmp) * ad * tmp;
+            }
+            
+            C(i,j) = Ei.transpose() * InvTransAd(Ad) * (Astar*E_tilde_dot_list.col(j) + Bstar*Ej);
+
+            if (i != j)
+            {
+                C(j,i) = Ej.transpose() * ((Bstar - Astar*ad)*InvAd(Ad)*Ei + Astar*InvAd(Ad)*E_tilde_dot_list.col(i));
+            }
+        }
+    }
+    return C;
 }
 
 VectorXf systemGravity()
@@ -454,32 +524,19 @@ VectorXf systemGravity()
     return G;
 }
 
-// int main()
-// {
-//     VectorXf q(6);
-//     VectorXf qdot(6);
-//     VectorXf g(6);
-//     Matrix4f T;
-//     T.setIdentity();
+int main()
+{
+    VectorXf q(6);
+    VectorXf dq(6);
+    VectorXf g(6);
+    Matrix4f T;
+    Vector4f t;
 
-//     q << 0, 0, -135, 90, 0, 0;
-//     //0.4 1.3 -3.1 0.6 -0.3 -0.06
-//     // q << 0, 0, -90, 0, 0, 0;
-//     q = q*M_PI/180;
-//     qdot.setZero();
+    q << 0,0,0,0,0,0;
+    dq << 0,0,0,0,0,0;
 
-//     setConstant();
-//     updateFKList(q, qdot);
-//     // for (int i=0; i<6; i++)
-//     // {
-//         // T = T * Tlist.block<4,4>(i*4, 0);
-//         // std::cout << T << std::endl << std::endl;
-//         // T = T * expse3(lambda_list.col(i)*q(i));
-//     // }
-//     // T = T*M;
-//     // std::cout << Tlist << std::endl;
-//     g = systemGravity();
-//     std::cout << g << std::endl;
-//     // std::cout << T0list <<std::endl;
+    setConstant();
+    updateFKList(q, dq);
+    systemBias(dq);
     
-// }
+}

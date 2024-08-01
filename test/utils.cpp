@@ -148,7 +148,7 @@ void Robotarm::scheme()
     updateFKList(q, qdot);
     g = systemGravity();
 
-    // std::cout << g << std::endl << std::endl;
+    std::cout << g << std::endl << std::endl;
 
     for (int i=0; i<6; i++)
     {
@@ -197,7 +197,7 @@ bool Robotarm::current_control()
                 {
                     // std::cout << cur_d[i] << " ";
                     base_command.mutable_actuators(i)->set_position(pos_p[i]);
-                    base_command.mutable_actuators(i)->set_current_motor(cur_d[i]);
+                    base_command.mutable_actuators(i)->set_current_motor(0);
 
                     cur_p[i] = base_feedback.actuators(i).current_motor();
                     std::cout << cur_p[i] << std::endl;
