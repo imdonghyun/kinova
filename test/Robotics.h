@@ -49,3 +49,4 @@ MatrixXf systemBias(VectorXf dq);
 VectorXf systemGravity();
 
 void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq);
+

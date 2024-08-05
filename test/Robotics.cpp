@@ -55,11 +55,13 @@ MatrixXf adlist(6*n,6);
 
 MatrixXf Alist(6*(n+1),6);
 
-MatrixXf taulist(6,n);
+VectorXf tau(n);
 
 VectorXf Fc(n);
 
-
+MatrixXf M(n,n);
+MatrixXf C(n,n);
+VectorXf G(n);
 
 
 bool isZero(float value)
@@ -540,13 +542,13 @@ void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, 
 {
     //V0 = (0,0,0,0,0,0), dV0 = (0,0,0,0,0,-9.81) for fixed-grounded base
     Matrix4f Ttmp;
-    MatrixXf Vlist(6,6);
-    MatrixXf Vdotlist(6,6);
+    MatrixXf Vlist(6,n);
+    MatrixXf Vdotlist(6,n);
     MatrixXf Adtmp(6,6);
     MatrixXf adtmp(6,6);
-    MatrixXf Teef(6,6);
+    MatrixXf Teef(4,4);
     MatrixXf Adeef(6,6);
-    MatrixXf Flist(6,7);
+    MatrixXf Flist(6,n+1);
     VectorXf Vtmp(6);
 
     //FR
@@ -580,9 +582,28 @@ void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, 
     {
         adtmp = adjop(Vlist.col(i)).transpose();
         Flist.col(i) = Fextlist.col(i) - Alist.block<6,6>(i*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>(i*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*Flist.col(i+1);
-        taulist.col(i) = -E_tilde_list.col(i).transpose() * Flist.col(i);
+        tau(i) = -E_tilde_list.col(i).transpose() * Flist.col(i);
         Adtmp = Adlist.block<6,6>(i*6, 0);
     }
+}
+
+void RNEdynamics(VectorXf q, VectorXf dq)
+{
+    VectorXf zeros(n);
+    VectorXf e(n);
+    MatrixXf Fext(6,n+1);
+
+    zeros.setZero();
+    Fext.setZero();
+
+    for (int i=0; i<n; i++)
+    {
+        e.setZero();
+        e(i) = 1;
+        RNE(Fext, zeros, zeros, q, zeros, e);
+        M.col(i) = tau;
+    }
+    
 }
 
 int main()
