@@ -4,7 +4,6 @@
 #include "config.h"
 
 
-
 using namespace Eigen;
 
 bool isZero(float value);
@@ -35,6 +34,8 @@ MatrixXf InvAd(MatrixXf Ad);
 
 MatrixXf InvTransAd(MatrixXf Ad);
 
+MatrixXf adjop(VectorXf V);
+
 MatrixXf getInertia(int i);
 
 void setConstant();
@@ -43,8 +44,8 @@ void updateFKList(VectorXf theta, VectorXf dtheta);
 
 MatrixXf systemInertia();
 
+MatrixXf systemBias(VectorXf dq);
+
 VectorXf systemGravity();
 
-MatrixXf adjop(VectorXf V);
-
-
+void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq);

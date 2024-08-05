@@ -1,3 +1,4 @@
+#define _USE_MATH_DEFINES
 #include <iostream>
 #include "Robotics.h"
 
@@ -9,8 +10,7 @@ v: linear velocity
 V: body twist
 
 {0}: base frame
-idx: i=0~5
-link: n=1~6
+idx: i=0~6
 {n}: nth link CoM frame
 {nJn-1}: nth joint frame
 T0list: transform matrix from {0} to {i+1} at initial state
@@ -29,29 +29,35 @@ Alist: inertia matrix
 Astarlist: accumulated inertia matrix
 */
 
+int n=6; //dof
+
 MatrixXf E_list(4,4);
 
-MatrixXf E_tilde_list(6,6);
+MatrixXf E_tilde_list(6,n);
 
-MatrixXf E_tilde_dot_list(6,6);
+MatrixXf E_tilde_dot_list(6,n);
 
-MatrixXf lambda_list(6,6);
+MatrixXf lambda_list(6,n);
 
-MatrixXf M0(4,4);
+MatrixXf Teef0(4,4);
 
-MatrixXf T0list(24,4);
+MatrixXf T0list(4*n,4);
 
-MatrixXf Tlist(24,4);
+MatrixXf Tlist(4*n,4);
 
-MatrixXf TJlist(24,4);
+MatrixXf TJlist(4*n,4);
 
-MatrixXf Adlist(36,6);
+MatrixXf Adlist(6*n,6);
 
-MatrixXf AdJlist(36,6);
+MatrixXf AdJlist(6*n,6);
 
-MatrixXf adlist(36,6);
+MatrixXf adlist(6*n,6);
 
-MatrixXf Alist(36,6);
+MatrixXf Alist(6*(n+1),6);
+
+MatrixXf taulist(6,n);
+
+VectorXf Fc(n);
 
 
 
@@ -181,10 +187,13 @@ VectorXf logSO3(MatrixXf R)
 {
     float cos = (R.trace()-1)/2;
     VectorXf w(3);
+    MatrixXf so3m(3,3);
 
     if (isZero(cos-1))
     {
-        w << 0,0,0;
+        so3m << 0,0,0,
+                0,0,0,
+                0,0,0;
     }
     else if (isZero(cos+1))
     {
@@ -203,29 +212,30 @@ VectorXf logSO3(MatrixXf R)
             w << 1+R(0,0), R(1,0), R(2,0);
             w = w*M_PI/sqrt(2*(1+R(0,0)));
         }
+        so3m = vecToso3(w);
     }
     else
     {
         float theta = acos(cos);
-        w = so3Tovec(R-R.transpose())*theta/(2*sin(theta));
+        so3m = R-R.transpose()*theta/(2*sin(theta));
     }
-    return w;
+    return so3m;
 }
 
 VectorXf logSE3(MatrixXf T)
 {
-    VectorXf V(6);
     VectorXf w(3);
-    VectorXf v(3);
     VectorXf p(3);
+    MatrixXf so3m(3,3);
+    MatrixXf se3m(4,4);
 
     p = T.block<3,1>(0,3);
-    w = logSO3(T.block<3,3>(0,0));
-    v = dexpso3inv(w) * p;
-    V.head(3) = w;
-    V.tail(3) = v;
+    so3m = logSO3(T.block<3,3>(0,0));
+    w = so3Tovec(so3m);
+    se3m.block<3,3>(0,0) = so3m;
+    se3m.block<3,1>(0,3) = dexpso3inv(w) * p;
 
-    return V;
+    return se3m;
 }
 
 MatrixXf Adjoint(MatrixXf T)
@@ -308,26 +318,28 @@ void setConstant()
     VectorXf v5(6);
     VectorXf v6(6);
 
-    v1 << 0, 0, 1, 0, 0, 0;
-    v2 << 0,-1, 0, 0.2433, 0, 0;
-    v3 << 0, 1, 0, -0.5233, 0, 0;
-    v4 << 0, 0, 1, -0.01, 0, 0;
-    v5 << 1, 0, 0, 0, 0.7683, 0.01;
-    v6 << 0, 0, 1, -0.01, -0.057, 0;
+    for (int i=0; i<n; i++)
+    {
+        for (int j=0; j<6; j++)
+        {
+            lambda_list(j,i) = lambdalist[i][j];
+        }
+    }
 
-    lambda_list << v1, v2, v3, v4, v5, v6;
-
-    M0 << 1,0,0,0.057,
-          0,1,0,-0.01,
-          0,0,1,1.0033,
-          0,0,0,1;
+    for (int i=0; i<4; i++)
+    {
+        for (int j=0; j<4; j++)
+        {
+            Teef0(i,j) = M0[i][j];
+        }
+    }
 
     Matrix4f T;
     Matrix4f Ttmp;
     Vector4f CMtmp;
     T.setIdentity();
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         for (int j=0; j<4; j++)
         {
@@ -351,7 +363,7 @@ void setConstant()
     VectorXf Ei(6);
     Ei << 0,0,1,0,0,0;
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         tmp = Adjoint(TJlist.block<4,4>(i*4, 0));
 
@@ -362,7 +374,7 @@ void setConstant()
 
     E_tilde_dot_list.setZero();
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         tmp.setZero();
         tmp.topLeftCorner(3,3) = getInertia(i);
@@ -375,7 +387,7 @@ void updateFKList(VectorXf q, VectorXf dq)
 {
     Matrix4f Ttmp;
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         if (i==0)
         {
@@ -396,25 +408,25 @@ void updateFKList(VectorXf q, VectorXf dq)
 
 MatrixXf systemInertia()
 {
-    MatrixXf M(6,6);
+    MatrixXf M(n,n);
     MatrixXf Ad(6,6);
-    MatrixXf Astarlist(36,6);
+    MatrixXf Astarlist(6*(n+1),6);
 
-    Astarlist.block<6,6>(30,0) = Alist.block<6,6>(30,0);
+    Astarlist.block<6,6>(6*n,0) = Alist.block<6,6>(6*n,0);
 
-    for (int i=5; i>0; i--)
+    for (int i=n; i>0; i--)
     {
-        Ad = Adlist.block<6,6>(i*6, 0);
+        Ad = Adlist.block<6,6>((i-1)*6, 0);
         Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*Astarlist.block<6,6>(i*6,0)*InvAd(Ad);
     }
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         Ad.setIdentity();
-        for (int j=i; j<6; j++)
+        for (int j=i; j<n; j++)
         {
             if (j>=i+1) Ad = Ad * Adlist.block<6,6>(j*6, 0);
-            M(i,j) = E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Astarlist.block<6,6>(j*6,0) * E_tilde_list.col(j);
+            M(i,j) = E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Astarlist.block<6,6>((j+1)*6,0) * E_tilde_list.col(j);
 
             if (i != j)
             {
@@ -427,11 +439,11 @@ MatrixXf systemInertia()
 
 MatrixXf systemBias(VectorXf dq)
 {
-    MatrixXf C(6,6);
+    MatrixXf C(n,n);
     MatrixXf ad(6,6);
-    MatrixXf Blist(36,6);
-    MatrixXf Bstarlist(36,6);
-    MatrixXf Astarlist(36,6);
+    MatrixXf Blist(6*(n+1),6);
+    MatrixXf Bstarlist(6*(n+1),6);
+    MatrixXf Astarlist(6*(n+1),6);
     MatrixXf Ad(6,6);
     MatrixXf Astar(6,6);
     MatrixXf Bstar(6,6);
@@ -441,17 +453,17 @@ MatrixXf systemBias(VectorXf dq)
     VectorXf Ej(6);
     V.setZero();
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         V = InvAd(Adlist.block<6,6>(i*6,0))*V + E_tilde_list*dq;
         ad = adjop(V);
         Blist.block<6,6>(i*6,0) = Alist.block<6,6>(i*6,0)*ad - ad.transpose()*Alist.block<6,6>(i*6,0);
     }
 
-    Astarlist.block<6,6>(30,0) = Alist.block<6,6>(30,0);
-    Bstarlist.block<6,6>(30,0) = Blist.block<6,6>(30,0);
+    Astarlist.block<6,6>(6*n,0) = Alist.block<6,6>(6*n,0);
+    Bstarlist.block<6,6>(6*n,0) = Blist.block<6,6>(6*n,0);
 
-    for (int i=5; i>0; i--)
+    for (int i=n-1; i>0; i--)
     {
         tmp = Astarlist.block<6,6>(i*6,0);
         Ad = Adlist.block<6,6>(i*6, 0);
@@ -459,13 +471,13 @@ MatrixXf systemBias(VectorXf dq)
         Bstarlist.block<6,6>((i-1)*6,0) = Blist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*(Bstarlist.block<6,6>(i*6,0) - tmp*adlist.block<6,6>(i*6,0))*InvAd(Ad);
     }
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         Ad.setIdentity();
         ad.setIdentity();
         Ei = E_tilde_list.col(i);
 
-        for (int j=i; j<6; j++)
+        for (int j=i; j<n; j++)
         {
             Astar = Astarlist.block<6,6>(j*6,0);
             Bstar = Bstarlist.block<6,6>(j*6,0);
@@ -490,17 +502,17 @@ MatrixXf systemBias(VectorXf dq)
 
 VectorXf systemGravity()
 {
-    VectorXf G(6);
+    VectorXf G(n);
     VectorXf gref(6);
     VectorXf gtmp(6);
     MatrixXf Ad(6,6);
-    MatrixXf g(6,6);
+    MatrixXf g(6,n);
 
     float tmp;
 
     gref << 0,0,0,0,0,-9.81;
 
-    for (int i=0; i<6; i++)
+    for (int i=0; i<n; i++)
     {
         Ad = Adlist.block<6,6>(i*6, 0);
 
@@ -509,11 +521,11 @@ VectorXf systemGravity()
         g.col(i) = gtmp;
     }
 
-    for (int i=0; i<6; i++) 
+    for (int i=0; i<n; i++) 
     {
         tmp = 0;
         Ad.setIdentity();
-        for (int j=i; j<6; j++)
+        for (int j=i; j<n; j++)
         {
             if (j>=i+1) Ad = Ad * Adlist.block<6,6>(j*6, 0);
             
@@ -522,6 +534,55 @@ VectorXf systemGravity()
         G(i) = -tmp;
     }
     return G;
+}
+
+void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq)
+{
+    //V0 = (0,0,0,0,0,0), dV0 = (0,0,0,0,0,-9.81) for fixed-grounded base
+    Matrix4f Ttmp;
+    MatrixXf Vlist(6,6);
+    MatrixXf Vdotlist(6,6);
+    MatrixXf Adtmp(6,6);
+    MatrixXf adtmp(6,6);
+    MatrixXf Teef(6,6);
+    MatrixXf Adeef(6,6);
+    MatrixXf Flist(6,7);
+    VectorXf Vtmp(6);
+
+    //FR
+    for (int i=0; i<n; i++)
+    {
+        Vtmp = E_tilde_list.col(i)*dq(i);
+        adlist.block<6,6>(i*6,0) = adjop(Vtmp);
+        if (i==0)   
+        {
+            Ttmp = expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
+            Adtmp = Adjoint(Ttmp);
+            Vlist.col(i) = InvAd(Adtmp)*V0 + Vtmp;
+            Vdotlist.col(i) = InvAd(Adtmp)*dV0 - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*V0 + E_tilde_list.col(i)*ddq(i) + E_tilde_dot_list.col(i)*dq(i);
+        }
+        else
+        {
+            Ttmp = Tinv(T0list.block<4,4>((i-1)*4,0))*expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
+            Adtmp = Adjoint(Ttmp);
+            Vlist.col(i) = InvAd(Adtmp)*Vlist.col(i-1) + Vtmp;
+            Vdotlist.col(i) = InvAd(Adtmp)*Vdotlist.col(i-1) - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*Vlist.col(i-1) + E_tilde_list.col(i)*ddq(i) + E_tilde_dot_list.col(i)*dq(i);
+        }        
+        Tlist.block<4,4>(i*4, 0) = Ttmp;
+        Adlist.block<6,6>(i*6, 0) = Adtmp;
+    }
+    Teef = Tinv(Tlist.block<4,4>(20,0))*Teef0;
+    Adtmp = Adjoint(Teef);
+
+    //BR
+    Flist.col(6) = Fextlist.col(6);
+    for (int i=n-1; i>=0; i--)
+    {
+        adtmp = adjop(Vlist.col(i)).transpose();
+        Flist.col(i) = Fextlist.col(i) - Alist.block<6,6>(i*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>(i*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*Flist.col(i+1);
+        taulist.col(i) = -E_tilde_list.col(i).transpose() * Flist.col(i);
+        Adtmp = Adlist.block<6,6>(i*6, 0);
+    }
 }
 
 int main()
