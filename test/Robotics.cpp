@@ -591,10 +591,12 @@ void RNEdynamics(VectorXf q, VectorXf dq)
 {
     VectorXf zeros(n);
     VectorXf e(n);
+    VectorXf dV0(6);
     MatrixXf Fext(6,n+1);
 
     zeros.setZero();
     Fext.setZero();
+    dV0 << 0,0,0,0,0,-9.81;
 
     for (int i=0; i<n; i++)
     {
@@ -603,6 +605,9 @@ void RNEdynamics(VectorXf q, VectorXf dq)
         RNE(Fext, zeros, zeros, q, zeros, e);
         M.col(i) = tau;
     }
+
+    RNE(Fext, zeros, dV0, q, zeros, zeros);
+    G = tau;
     
 }
 
