@@ -376,7 +376,7 @@ void setConstant()
 
     E_tilde_dot_list.setZero();
 
-    for (int i=0; i<n; i++)
+    for (int i=0; i<=n; i++)
     {
         tmp.setZero();
         tmp.topLeftCorner(3,3) = getInertia(i);
@@ -459,16 +459,16 @@ MatrixXf systemBias(VectorXf dq)
     {
         V = InvAd(Adlist.block<6,6>(i*6,0))*V + E_tilde_list*dq;
         ad = adjop(V);
-        Blist.block<6,6>(i*6,0) = Alist.block<6,6>(i*6,0)*ad - ad.transpose()*Alist.block<6,6>(i*6,0);
+        Blist.block<6,6>((i+1)*6,0) = Alist.block<6,6>((i+1)*6,0)*ad - ad.transpose()*Alist.block<6,6>((i+1)*6,0);
     }
 
     Astarlist.block<6,6>(6*n,0) = Alist.block<6,6>(6*n,0);
     Bstarlist.block<6,6>(6*n,0) = Blist.block<6,6>(6*n,0);
 
-    for (int i=n-1; i>0; i--)
+    for (int i=n; i>0; i--)
     {
         tmp = Astarlist.block<6,6>(i*6,0);
-        Ad = Adlist.block<6,6>(i*6, 0);
+        Ad = Adlist.block<6,6>((i-1)*6, 0);
         Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad) * tmp * InvAd(Ad);
         Bstarlist.block<6,6>((i-1)*6,0) = Blist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*(Bstarlist.block<6,6>(i*6,0) - tmp*adlist.block<6,6>(i*6,0))*InvAd(Ad);
     }
@@ -481,8 +481,8 @@ MatrixXf systemBias(VectorXf dq)
 
         for (int j=i; j<n; j++)
         {
-            Astar = Astarlist.block<6,6>(j*6,0);
-            Bstar = Bstarlist.block<6,6>(j*6,0);
+            Astar = Astarlist.block<6,6>((j+1)*6,0);
+            Bstar = Bstarlist.block<6,6>((j+1)*6,0);
             Ej = E_tilde_list.col(j);
             if (j>=i+1) 
             {
@@ -531,7 +531,7 @@ VectorXf systemGravity()
         {
             if (j>=i+1) Ad = Ad * Adlist.block<6,6>(j*6, 0);
             
-            tmp = tmp + E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Alist.block<6,6>(j*6, 0) * g.col(j);
+            tmp = tmp + E_tilde_list.col(i).transpose() * InvTransAd(Ad) * Alist.block<6,6>((j+1)*6, 0) * g.col(j);
         }
         G(i) = -tmp;
     }
@@ -581,7 +581,7 @@ void RNE(VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq, Matri
     for (int i=n-1; i>=0; i--)
     {
         adtmp = adjop(Vlist.col(i)).transpose();
-        Flist.col(i) = Fextlist.col(i) - Alist.block<6,6>(i*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>(i*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*Flist.col(i+1);
+        Flist.col(i) = Fextlist.col(i) - Alist.block<6,6>((i+1)*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>((i+1)*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*Flist.col(i+1);
         tau(i) = -E_tilde_list.col(i).transpose() * Flist.col(i);
         Adtmp = Adlist.block<6,6>(i*6, 0);
     }
@@ -617,14 +617,26 @@ int main()
     VectorXf q(6);
     VectorXf dq(6);
     VectorXf g(6);
+    VectorXf zeros(6);
     Matrix4f T;
     Vector4f t;
+
+
+    zeros.setZero();
 
     q << 0,0,0,0,0,0;
     dq << 0,0,0,0,0,0;
 
     setConstant();
     updateFKList(q, dq);
-    systemBias(dq);
+    M = systemInertia();
+    c = systemBias(dq) * dq;
+    G = systemGravity();
+    std::cout << M << std::endl << c << std::endl << G << std::endl;
+
+    RNEdynamics(zeros, q, dq);
+    std::cout << M << std::endl << c << std::endl << G << std::endl;
+
+
     
 }
