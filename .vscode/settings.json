@@ -1,9 +1,0 @@
-{
-    "files.associations": {
-        "tensor": "cpp",
-        "cmath": "cpp",
-        "iostream": "cpp",
-        "dense": "cpp"
-    },
-    "cmake.sourceDirectory": "C:/Users/donghyunlim/kinova/test"
-}

@@ -60,7 +60,7 @@ VectorXf tau(n);
 VectorXf Fc(n);
 
 MatrixXf M(n,n);
-MatrixXf C(n,n);
+VectorXf c(n);
 VectorXf G(n);
 
 
@@ -538,7 +538,7 @@ VectorXf systemGravity()
     return G;
 }
 
-void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq)
+void RNE(VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq, MatrixXf Fextlist)
 {
     //V0 = (0,0,0,0,0,0), dV0 = (0,0,0,0,0,-9.81) for fixed-grounded base
     Matrix4f Ttmp;
@@ -587,26 +587,27 @@ void RNE(MatrixXf Fextlist, VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, 
     }
 }
 
-void RNEdynamics(VectorXf q, VectorXf dq)
+void RNEdynamics(VectorXf V0, VectorXf q, VectorXf dq)
 {
     VectorXf zeros(n);
     VectorXf e(n);
-    VectorXf dV0(6);
+    VectorXf g(6);
     MatrixXf Fext(6,n+1);
 
     zeros.setZero();
     Fext.setZero();
-    dV0 << 0,0,0,0,0,-9.81;
+    g << 0,0,0,0,0,-9.81;
 
     for (int i=0; i<n; i++)
     {
         e.setZero();
         e(i) = 1;
-        RNE(Fext, zeros, zeros, q, zeros, e);
+        RNE(zeros, zeros, q, zeros, e, Fext);
         M.col(i) = tau;
     }
-
-    RNE(Fext, zeros, dV0, q, zeros, zeros);
+    RNE(V0, zeros, q, dq, zeros, Fext);
+    c = tau;
+    RNE(zeros, g, q, zeros, zeros, Fext);
     G = tau;
     
 }
