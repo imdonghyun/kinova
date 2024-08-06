@@ -1,4 +1,4 @@
-# kinova
+# kinova gen3 lite current control example
 robotics practice
 
 build (When editting CMakeLists.txt)
