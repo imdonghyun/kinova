@@ -632,11 +632,6 @@ int main()
 
     setConstant();
     updateFKList(q, dq);
-    std::cout << Alist << std::endl;
-    std::cout << TJlist << std::endl;
-    std::cout << T0list << std::endl;
-    std::cout << Adlist << std::endl;
-    std::cout << E_tilde_list << std::endl;
 
     M = systemInertia();
     c = systemBias(dq) * dq;
