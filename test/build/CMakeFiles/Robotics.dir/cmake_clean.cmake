@@ -1,7 +1,7 @@
 file(REMOVE_RECURSE
   "CMakeFiles/Robotics.dir/Robotics.cpp.o"
-  "bin/Robotics.pdb"
   "bin/Robotics"
+  "bin/Robotics.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

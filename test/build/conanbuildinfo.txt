@@ -1,14 +1,14 @@
 [includedirs]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include
 
 [libdirs]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/lib
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/lib
 
 [bindirs]
 
@@ -17,7 +17,7 @@
 
 
 [builddirs]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/
 
 [libs]
 KortexApiCpp
@@ -54,16 +54,16 @@ KortexApiCpp
 
 
 [includedirs_kortex_api_cpp]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include
 
 [libdirs_kortex_api_cpp]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/lib
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/lib
 
 [bindirs_kortex_api_cpp]
 
@@ -72,7 +72,7 @@ KortexApiCpp
 
 
 [builddirs_kortex_api_cpp]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/
 
 [libs_kortex_api_cpp]
 KortexApiCpp
@@ -108,7 +108,7 @@ KortexApiCpp
 
 
 [rootpath_kortex_api_cpp]
-/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220
+/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220
 
 [name_kortex_api_cpp]
 kortex_api_cpp

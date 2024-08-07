@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/ctrl/kinova/test/Robotics.cpp" "/home/ctrl/kinova/test/build/CMakeFiles/Robotics.dir/Robotics.cpp.o"
+  "/home/lim/kinova/test/Robotics.cpp" "/home/lim/kinova/test/build/CMakeFiles/Robotics.dir/Robotics.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -18,13 +18,13 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "."
   "../"
   "../thirdParty/cxxopts"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs"
-  "/home/ctrl/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/client_stubs"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/common"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/messages"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/include/server_stubs"
+  "/home/lim/.conan/data/kortex_api_cpp/2.6.0-r.3/kortex/stable/package/c023db9fc677d4d0b3bd0c20f71385e4cf8a1220/thirdParty/include"
   )
 
 # Targets to which this target links.

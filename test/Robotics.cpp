@@ -10,7 +10,7 @@ v: linear velocity
 V: body twist
 
 {0}: base frame
-idx: i=0~6
+idx: i=0~5
 {n}: nth link CoM frame
 {nJn-1}: nth joint frame
 T0list: transform matrix from {0} to {i+1} at initial state
@@ -25,13 +25,12 @@ Adlist: Adjoint matrix from {i} to {i+1}
 AdJlist: Adjoint matrix from {i+1} to {(i+1)Ji}
 adlist: adjoint operator from {i} to {i+1} 
 
-Alist: inertia matrix
+idx: i:0~6
+Alist: ith link CoM inertia matrix
 Astarlist: accumulated inertia matrix
 */
 
 int n=6; //dof
-
-MatrixXf E_list(4,4);
 
 MatrixXf E_tilde_list(6,n);
 
@@ -351,14 +350,14 @@ void setConstant()
             }
         }
         T = T*Ttmp;
-        CMtmp << CM[i][0], CM[i][1], CM[i][2], 1;
+        CMtmp << CM[i+1][0], CM[i+1][1], CM[i+1][2], 1;
 
         T0list.block<3,3>(i*4, 0) = T.block<3,3>(0,0);
         T0list.block<1,3>(i*4+3, 0).setZero();
         T0list.block<4,1>(i*4, 3) = T*CMtmp;
 
         TJlist.block<4,4>(i*4, 0).setIdentity();
-        TJlist.block<3,1>(i*4, 3) << -CM[i][0], -CM[i][1], -CM[i][2];
+        TJlist.block<3,1>(i*4, 3) << -CM[i+1][0], -CM[i+1][1], -CM[i+1][2];
     }
 
     MatrixXf tmp(6,6);
@@ -421,6 +420,8 @@ MatrixXf systemInertia()
         Ad = Adlist.block<6,6>((i-1)*6, 0);
         Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*Astarlist.block<6,6>(i*6,0)*InvAd(Ad);
     }
+
+    std::cout << Astarlist << std::endl;
 
     for (int i=0; i<n; i++)
     {
@@ -627,8 +628,16 @@ int main()
     q << 0,0,0,0,0,0;
     dq << 0,0,0,0,0,0;
 
+    
+
     setConstant();
     updateFKList(q, dq);
+    std::cout << Alist << std::endl;
+    std::cout << TJlist << std::endl;
+    std::cout << T0list << std::endl;
+    std::cout << Adlist << std::endl;
+    std::cout << E_tilde_list << std::endl;
+
     M = systemInertia();
     c = systemBias(dq) * dq;
     G = systemGravity();
