@@ -59,6 +59,7 @@ VectorXf tau(n);
 VectorXf Fc(n);
 
 MatrixXf M(n,n);
+MatrixXf C(n,n);
 VectorXf c(n);
 VectorXf G(n);
 
@@ -421,8 +422,6 @@ MatrixXf systemInertia()
         Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*Astarlist.block<6,6>(i*6,0)*InvAd(Ad);
     }
 
-    std::cout << Astarlist << std::endl;
-
     for (int i=0; i<n; i++)
     {
         Ad.setIdentity();
@@ -455,13 +454,16 @@ MatrixXf systemBias(VectorXf dq)
     VectorXf Ei(6);
     VectorXf Ej(6);
     V.setZero();
+    Blist.block<6,6>(0,0).setZero();
 
     for (int i=0; i<n; i++)
     {
-        V = InvAd(Adlist.block<6,6>(i*6,0))*V + E_tilde_list*dq;
+        V = InvAd(Adlist.block<6,6>(i*6,0))*V + E_tilde_list.col(i)*dq(i);
         ad = adjop(V);
         Blist.block<6,6>((i+1)*6,0) = Alist.block<6,6>((i+1)*6,0)*ad - ad.transpose()*Alist.block<6,6>((i+1)*6,0);
     }
+
+    std::cout << Blist << std::endl;
 
     Astarlist.block<6,6>(6*n,0) = Alist.block<6,6>(6*n,0);
     Bstarlist.block<6,6>(6*n,0) = Blist.block<6,6>(6*n,0);
@@ -548,8 +550,7 @@ void RNE(VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq, Matri
     MatrixXf Adtmp(6,6);
     MatrixXf adtmp(6,6);
     MatrixXf Teef(4,4);
-    MatrixXf Adeef(6,6);
-    MatrixXf Flist(6,n+1);
+    VectorXf F(6);
     VectorXf Vtmp(6);
 
     //FR
@@ -574,18 +575,79 @@ void RNE(VectorXf V0, VectorXf dV0, VectorXf q, VectorXf dq, VectorXf ddq, Matri
         Tlist.block<4,4>(i*4, 0) = Ttmp;
         Adlist.block<6,6>(i*6, 0) = Adtmp;
     }
-    Teef = Tinv(Tlist.block<4,4>(20,0))*Teef0;
+    Teef = Tinv(Tlist.block<4,4>((n-1)*4,0))*Teef0;
     Adtmp = Adjoint(Teef);
 
     //BR
-    Flist.col(6) = Fextlist.col(6);
+    F = Fextlist.col(n+1);
     for (int i=n-1; i>=0; i--)
     {
         adtmp = adjop(Vlist.col(i)).transpose();
-        Flist.col(i) = Fextlist.col(i) - Alist.block<6,6>((i+1)*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>((i+1)*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*Flist.col(i+1);
-        tau(i) = -E_tilde_list.col(i).transpose() * Flist.col(i);
+        F = Fextlist.col(i+1) - Alist.block<6,6>((i+1)*6,0)*Vdotlist.col(i) + adtmp*Alist.block<6,6>((i+1)*6,0)*Vlist.col(i) + InvTransAd(Adtmp)*F;
+        tau(i) = -E_tilde_list.col(i).transpose() * F;
         Adtmp = Adlist.block<6,6>(i*6, 0);
     }
+    adtmp = adjop(V0).transpose();
+    Fc = Fextlist.col(0) - Alist.block<6,6>(0,0)*dV0 + adtmp*Alist.block<6,6>(0,0)*V0 + InvTransAd(Adtmp)*F;
+}
+
+void pRNE(VectorXf V0, VectorXf q, VectorXf dq, MatrixXf Fextlist, VectorXf V0ref, VectorXf dV0ref, VectorXf dqref, VectorXf ddqref)
+{
+    //V0 = (0,0,0,0,0,0), dV0 = (0,0,0,0,0,-9.81) for fixed-grounded base
+    Matrix4f Ttmp;
+    MatrixXf Vlist(6,n);
+    MatrixXf dVlist(6,n);
+    MatrixXf Vreflist(6,n);
+    MatrixXf dVreflist(6,n);
+    MatrixXf Adtmp(6,6);
+    MatrixXf adtmp(6,6);
+    MatrixXf A(6,6);
+    MatrixXf Teef(4,4);
+    VectorXf F(6);
+    VectorXf Ei(6);
+    VectorXf Vtmp(6);
+
+    //FR
+    for (int i=0; i<n; i++)
+    {
+        Ei = E_tilde_list.col(i);
+        Vtmp = Ei*dq(i);
+        adlist.block<6,6>(i*6,0) = adjop(Vtmp);
+        if (i==0)   
+        {
+            Ttmp = expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
+            Adtmp = Adjoint(Ttmp);
+            Vlist.col(i) = InvAd(Adtmp)*V0 + Vtmp;
+            Vreflist.col(i) = InvAd(Adtmp)*V0ref + Ei*dqref;
+            dVreflist.col(i) = InvAd(Adtmp)*dV0ref - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*V0ref + Ei*ddqref(i) + E_tilde_dot_list.col(i)*dqref(i);
+        }
+        else
+        {
+            Ttmp = Tinv(T0list.block<4,4>((i-1)*4,0))*expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
+            Adtmp = Adjoint(Ttmp);
+            Vlist.col(i) = InvAd(Adtmp)*Vlist.col(i-1) + Vtmp;
+            Vreflist.col(i) = InvAd(Adtmp)*Vreflist.col(i-1) + Ei*dqref;
+            dVreflist.col(i) = InvAd(Adtmp)*dVreflist.col(i-1) - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*Vreflist.col(i-1) + Ei*ddqref(i) + E_tilde_dot_list.col(i)*dqref(i);
+        }        
+        Tlist.block<4,4>(i*4, 0) = Ttmp;
+        Adlist.block<6,6>(i*6, 0) = Adtmp;
+    }
+    Teef = Tinv(Tlist.block<4,4>((n-1)*4,0))*Teef0;
+    Adtmp = Adjoint(Teef);
+
+    //BR
+    F = Fextlist.col(n+1);
+    for (int i=n-1; i>=0; i--)
+    {
+        adtmp = adjop(Vlist.col(i));
+        A = Alist.block<6,6>((i+1)*6,0);
+        F = Fextlist.col(i+1) - A*dVreflist.col(i) + (adtmp.transpose()*A - A*adtmp)*Vreflist.col(i) + InvTransAd(Adtmp)*F;
+        tau(i) = -E_tilde_list.col(i).transpose() * F;
+        Adtmp = Adlist.block<6,6>(i*6, 0);
+    }
+    adtmp = adjop(V0);
+    A = Alist.block<6,6>(0,0);
+    Fc = Fextlist.col(0) - A*dV0ref + (adtmp.transpose()*A - A*adtmp)*V0ref + InvTransAd(Adtmp)*F;
 }
 
 void RNEdynamics(VectorXf V0, VectorXf q, VectorXf dq)
@@ -593,7 +655,7 @@ void RNEdynamics(VectorXf V0, VectorXf q, VectorXf dq)
     VectorXf zeros(n);
     VectorXf e(n);
     VectorXf g(6);
-    MatrixXf Fext(6,n+1);
+    MatrixXf Fext(6,n+2); //F0, F1, ... , Fn, Feef
 
     zeros.setZero();
     Fext.setZero();
@@ -608,9 +670,15 @@ void RNEdynamics(VectorXf V0, VectorXf q, VectorXf dq)
     }
     RNE(V0, zeros, q, dq, zeros, Fext);
     c = tau;
+    for (int i=0; i<n; i++)
+    {
+        e.setZero();
+        e(i) = 1;
+        pRNE(V0, q, dq, Fext, zeros, zeros, e, zeros);
+        C.col(i) = tau;
+    }
     RNE(zeros, g, q, zeros, zeros, Fext);
     G = tau;
-    
 }
 
 int main()
@@ -626,20 +694,22 @@ int main()
     zeros.setZero();
 
     q << 0,0,0,0,0,0;
-    dq << 0,0,0,0,0,0;
+    dq << 1,1,1,1,1,1;
 
     
 
     setConstant();
     updateFKList(q, dq);
 
+    std::cout << adlist << std::endl;
+
     M = systemInertia();
-    c = systemBias(dq) * dq;
+    C = systemBias(dq);
     G = systemGravity();
-    std::cout << M << std::endl << c << std::endl << G << std::endl;
+    std::cout << M << std::endl << C << std::endl << G << std::endl;
 
     RNEdynamics(zeros, q, dq);
-    std::cout << M << std::endl << c << std::endl << G << std::endl;
+    std::cout << M << std::endl << C << std::endl << G << std::endl;
 
 
     
