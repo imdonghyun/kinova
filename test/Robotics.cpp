@@ -463,17 +463,15 @@ MatrixXf systemBias(VectorXf dq)
         Blist.block<6,6>((i+1)*6,0) = Alist.block<6,6>((i+1)*6,0)*ad - ad.transpose()*Alist.block<6,6>((i+1)*6,0);
     }
 
-    std::cout << Blist << std::endl;
-
     Astarlist.block<6,6>(6*n,0) = Alist.block<6,6>(6*n,0);
     Bstarlist.block<6,6>(6*n,0) = Blist.block<6,6>(6*n,0);
 
     for (int i=n; i>0; i--)
     {
-        tmp = Astarlist.block<6,6>(i*6,0);
+        Astar = Astarlist.block<6,6>(i*6,0);
         Ad = Adlist.block<6,6>((i-1)*6, 0);
-        Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad) * tmp * InvAd(Ad);
-        Bstarlist.block<6,6>((i-1)*6,0) = Blist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*(Bstarlist.block<6,6>(i*6,0) - tmp*adlist.block<6,6>(i*6,0))*InvAd(Ad);
+        Astarlist.block<6,6>((i-1)*6,0) = Alist.block<6,6>((i-1)*6,0) + InvTransAd(Ad) * Astar * InvAd(Ad);
+        Bstarlist.block<6,6>((i-1)*6,0) = Blist.block<6,6>((i-1)*6,0) + InvTransAd(Ad)*(Bstarlist.block<6,6>(i*6,0) - Astar*adlist.block<6,6>((i-1)*6,0))*InvAd(Ad);
     }
 
     for (int i=0; i<n; i++)
@@ -596,7 +594,6 @@ void pRNE(VectorXf V0, VectorXf q, VectorXf dq, MatrixXf Fextlist, VectorXf V0re
     //V0 = (0,0,0,0,0,0), dV0 = (0,0,0,0,0,-9.81) for fixed-grounded base
     Matrix4f Ttmp;
     MatrixXf Vlist(6,n);
-    MatrixXf dVlist(6,n);
     MatrixXf Vreflist(6,n);
     MatrixXf dVreflist(6,n);
     MatrixXf Adtmp(6,6);
@@ -608,31 +605,33 @@ void pRNE(VectorXf V0, VectorXf q, VectorXf dq, MatrixXf Fextlist, VectorXf V0re
     VectorXf Vtmp(6);
 
     //FR
+    Ttmp.setIdentity();
+    auto V = V0;
+    auto Vref = V0ref;
+    auto dVref = dV0ref;
+
     for (int i=0; i<n; i++)
     {
         Ei = E_tilde_list.col(i);
+        Ttmp = Ttmp*expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
+        Adtmp = Adjoint(Ttmp);
+
         Vtmp = Ei*dq(i);
-        adlist.block<6,6>(i*6,0) = adjop(Vtmp);
-        if (i==0)   
-        {
-            Ttmp = expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
-            Adtmp = Adjoint(Ttmp);
-            Vlist.col(i) = InvAd(Adtmp)*V0 + Vtmp;
-            Vreflist.col(i) = InvAd(Adtmp)*V0ref + Ei*dqref;
-            dVreflist.col(i) = InvAd(Adtmp)*dV0ref - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*V0ref + Ei*ddqref(i) + E_tilde_dot_list.col(i)*dqref(i);
-        }
-        else
-        {
-            Ttmp = Tinv(T0list.block<4,4>((i-1)*4,0))*expse3(lambda_list.col(i)*q(i))*T0list.block<4,4>(i*4,0);
-            Adtmp = Adjoint(Ttmp);
-            Vlist.col(i) = InvAd(Adtmp)*Vlist.col(i-1) + Vtmp;
-            Vreflist.col(i) = InvAd(Adtmp)*Vreflist.col(i-1) + Ei*dqref;
-            dVreflist.col(i) = InvAd(Adtmp)*dVreflist.col(i-1) - adlist.block<6,6>(i*6,0)*InvAd(Adtmp)*Vreflist.col(i-1) + Ei*ddqref(i) + E_tilde_dot_list.col(i)*dqref(i);
-        }        
+        adtmp = adjop(Vtmp);
+
+        dVref = InvAd(Adtmp)*dVref - adtmp*InvAd(Adtmp)*Vref + Ei*ddqref(i) + E_tilde_dot_list.col(i)*dqref(i);
+        Vref = InvAd(Adtmp)*Vref + Ei*dqref(i);
+        V = InvAd(Adtmp)*V + Vtmp;
+            
         Tlist.block<4,4>(i*4, 0) = Ttmp;
         Adlist.block<6,6>(i*6, 0) = Adtmp;
+        Vlist.col(i) = V;
+        Vreflist.col(i) = Vref;
+        dVreflist.col(i) = dVref;
+
+        Ttmp = Tinv(T0list.block<4,4>(i*4,0));
     }
-    Teef = Tinv(Tlist.block<4,4>((n-1)*4,0))*Teef0;
+    Teef = Tinv(T0list.block<4,4>((n-1)*4,0))*Teef0;
     Adtmp = Adjoint(Teef);
 
     //BR
@@ -642,12 +641,16 @@ void pRNE(VectorXf V0, VectorXf q, VectorXf dq, MatrixXf Fextlist, VectorXf V0re
         adtmp = adjop(Vlist.col(i));
         A = Alist.block<6,6>((i+1)*6,0);
         F = Fextlist.col(i+1) - A*dVreflist.col(i) + (adtmp.transpose()*A - A*adtmp)*Vreflist.col(i) + InvTransAd(Adtmp)*F;
+        // std::cout << Adtmp << std::endl;
+        // std::cout << adtmp << std::endl;
+
         tau(i) = -E_tilde_list.col(i).transpose() * F;
         Adtmp = Adlist.block<6,6>(i*6, 0);
     }
+    
     adtmp = adjop(V0);
     A = Alist.block<6,6>(0,0);
-    Fc = Fextlist.col(0) - A*dV0ref + (adtmp.transpose()*A - A*adtmp)*V0ref + InvTransAd(Adtmp)*F;
+    Fc = Fextlist.col(0) - A*dV0ref + (adtmp*A - A*adtmp)*V0ref + InvTransAd(Adtmp)*F;
 }
 
 void RNEdynamics(VectorXf V0, VectorXf q, VectorXf dq)
@@ -706,10 +709,11 @@ int main()
     M = systemInertia();
     C = systemBias(dq);
     G = systemGravity();
-    std::cout << M << std::endl << C << std::endl << G << std::endl;
-
+    // std::cout << M << std::endl << C << std::endl << G << std::endl;
+    
     RNEdynamics(zeros, q, dq);
-    std::cout << M << std::endl << C << std::endl << G << std::endl;
+    // std::cout << M << std::endl << C << std::endl << G << std::endl;
+    // std::cout << c << std::endl;
 
 
     
