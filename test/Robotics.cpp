@@ -477,7 +477,10 @@ MatrixXf systemBias(VectorXf dq)
     for (int i=0; i<n; i++)
     {
         Ad.setIdentity();
-        ad.setIdentity();
+        if (i != n-1)
+        {
+            ad = adlist.block<6,6>((i+1)*6,0);
+        }
         Ei = E_tilde_list.col(i);
 
         for (int j=i; j<n; j++)
@@ -489,8 +492,12 @@ MatrixXf systemBias(VectorXf dq)
             {
                 tmp = Adlist.block<6,6>(j*6, 0);
                 Ad = Ad * tmp;
-                ad = adlist.block<6,6>(j*6,0) + InvAd(tmp) * ad * tmp;
+                if (j != i+1)
+                {
+                    ad = adlist.block<6,6>(j*6,0) + InvAd(tmp) * ad * tmp;
+                }
             }
+            
             
             C(i,j) = Ei.transpose() * InvTransAd(Ad) * (Astar*E_tilde_dot_list.col(j) + Bstar*Ej);
 
@@ -704,15 +711,15 @@ int main()
     setConstant();
     updateFKList(q, dq);
 
-    std::cout << adlist << std::endl;
+    // std::cout << adlist << std::endl;
 
     M = systemInertia();
     C = systemBias(dq);
     G = systemGravity();
-    // std::cout << M << std::endl << C << std::endl << G << std::endl;
+    std::cout << M << std::endl << C << std::endl << G << std::endl;
     
     RNEdynamics(zeros, q, dq);
-    // std::cout << M << std::endl << C << std::endl << G << std::endl;
+    std::cout << M << std::endl << C << std::endl << G << std::endl;
     // std::cout << c << std::endl;
 
 
